@@ -1,8 +1,10 @@
 const express = require('express');
 const _ = require('lodash');
+const { ObjectID } = require('mongodb');
 const { auth } = require('./../middlewares/auth');
 
 const { Booking } = require('./../db/models/booking');
+const { User } = require('./../db/models/user');
 
 let bookingsRoutes = express.Router();
 
@@ -28,9 +30,35 @@ bookingsRoutes.post('/', auth, async (req, res) => {
     }
 });
 
-bookingsRoutes.get('/');
+bookingsRoutes.get('/', auth, async (req, res) => {
+    try {
+        let bookings = await Booking.find({}).lean();
 
-bookingsRoutes.get('/:id');
+        for (var i = 0; i < bookings.length; i++) {
+            bookings[i].creatorInfo = await User.findById(bookings[i]._creator, '-_id username name');            
+        }
+
+        res.send(bookings);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+bookingsRoutes.get('/:id', auth, async (req, res) => {
+    let bookingId = req.params.id;
+
+    if (!ObjectID.isValid(bookingId)) {
+        return res.status(404).send();
+    }
+
+    try {
+        let booking = await Booking.findById(bookingId).lean();
+        booking.creatorInfo = await User.findById(booking._creator, '-_id username name');
+        res.send(booking);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
 
 bookingsRoutes.patch('/:id');
 

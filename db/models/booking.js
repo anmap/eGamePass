@@ -44,15 +44,12 @@ const BookingSchema = new mongoose.Schema({
 BookingSchema.statics.getAllBookingCodes = async function() {
     let User = this;
 
-    console.log('Getting booking code');
-
     try {
         let bookingCodes = await Booking.find({}, '-_id bookingCode');
         return _.map(bookingCodes, obj => obj.bookingCode);
     } catch (error) {
         return Promise.reject();
     }
-    
 }
 
 BookingSchema.statics.generateBookingCode = function() {

@@ -12,6 +12,12 @@ const UserSchema = new mongoose.Schema({
         minlength: 5,
         unique: true
     },
+    name: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 1
+    },
     password: {
         type: String,
         required: true,
@@ -35,7 +41,7 @@ UserSchema.methods.toJSON = function() {
     let user = this;
     let userObject = user.toObject();
 
-    return _.pick(userObject, ['_id', 'username']);
+    return _.pick(userObject, ['_id', 'username', 'name']);
 };
 
 // Define custom instance methods

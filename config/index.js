@@ -1,9 +1,10 @@
-require('./env_config');
+const env = process.env.NODE_ENV || 'development';
 
-module.exports = {
-    /* App info */
-    APP_NAME: 'VKOYS-VTTT-api',
-    /* Server configuration */
-    PORT: process.env.PORT,
-    MONGODB_URI: process.env.MONGODB_URI
+if (env === 'development' || env === 'test') {
+    const config = require('./config.json');
+    const envConfig = config[env];
+
+    Object.keys(envConfig).forEach(key => {
+        process.env[key] = envConfig[key];
+    });
 }

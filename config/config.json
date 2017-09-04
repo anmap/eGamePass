@@ -1,0 +1,14 @@
+{
+    "development": {
+        "PORT": 7805,
+        "MONGODB_URI": "mongodb://localhost:27017/VKOYS-VTTT",
+        "JWT_SECRET": "VKOYS_VTTT_API_DEV_3WSZ5RFCFGH7UYHNB09IUJKL;.,M",
+        "AUTH_HEADER": "x-vkoys-vttt-auth"
+    },
+    "test": {
+        "PORT": 7805,
+        "MONGODB_URI": "mongodb://localhost:27017/VKOYS-VTTT-Test",
+        "JWT_SECRET": "VKOYS_VTTT_API_DEV_CFTGHUJM6YGRTYU",
+        "AUTH_HEADER": "x-vkoys-vttt-auth"
+    }
+}

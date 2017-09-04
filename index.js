@@ -1,5 +1,5 @@
 // Import configurations
-const { APP_NAME, PORT } = require('./config');
+require('./config');
 
 // Import libraries and frameworks
 const _ = require('lodash');
@@ -15,10 +15,12 @@ let app = express();
 app.use(bodyParser.json()); // Configure app to use JSON
 
 // Routes
+app.use('/users', require('./routes/users'));
+app.use('/bookings', require('./routes/bookings'))
 
 // Run app on specified PORT (from config.js)
-app.listen(PORT, () => {
-    console.log(`${APP_NAME} is running on ${PORT}...`);
+app.listen(process.env.PORT, () => {
+    console.log(`App is running on port ${process.env.PORT}...`);
 });
 
 // Export app for testing

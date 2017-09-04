@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const _ = require('lodash');
 const validator = require('validator');
 
 const BookingSchema = new mongoose.Schema({
@@ -38,6 +39,31 @@ const BookingSchema = new mongoose.Schema({
         required: true
     }
 });
+
+// Statics methods
+BookingSchema.statics.getAllBookingCodes = async function() {
+    let User = this;
+
+    console.log('Getting booking code');
+
+    try {
+        let bookingCodes = await Booking.find({}, '-_id bookingCode');
+        return _.map(bookingCodes, obj => obj.bookingCode);
+    } catch (error) {
+        return Promise.reject();
+    }
+    
+}
+
+BookingSchema.statics.generateBookingCode = function() {
+    let text = "";
+    let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  
+    for (let i = 0; i < 8; i++)
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+  
+    return text;
+}
 
 const Booking = mongoose.model('Booking', BookingSchema);
 

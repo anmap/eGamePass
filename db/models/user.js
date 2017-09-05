@@ -45,6 +45,13 @@ UserSchema.methods.toJSON = function() {
 };
 
 // Define custom instance methods
+UserSchema.methods.toJSONWithTokens = function() {
+    let user = this;
+    let userObject = user.toObject();
+
+    return _.pick(userObject, ['_id', 'username', 'name', 'tokens']);
+};
+
 UserSchema.methods.generateAuthToken = function() {
     let user = this;
     let access = 'auth';

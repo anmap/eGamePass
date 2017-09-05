@@ -6,12 +6,14 @@ const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
+const cors = require('cors');
 
 // Import DB & models
 const { mongoose } = require('./db/mongoose'); // (This will connect to DB)
 
 // Setup express and middlewares
 let app = express();
+app.use(cors());
 app.use(bodyParser.json()); // Configure app to use JSON
 
 // Routes

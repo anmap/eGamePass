@@ -12,12 +12,12 @@ const BookingSchema = new mongoose.Schema({
     email: {
         type: String,
         trim: true,
-        minlength: 1,
+        //minlength: 1,
         unique: true,
-        validate: {
-            validator: validator.isEmail,
-            message: `Not a valid email`
-        }
+        // validate: {
+        //     validator: validator.isEmail,
+        //     message: `Not a valid email`
+        // }
     },
     tel: {
         type: Number,

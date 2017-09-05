@@ -29,7 +29,7 @@ usersRoutes.post('/login', async (req, res) => {
         let body = _.pick(req.body, ['username', 'password']);
         let user = await User.findByCredentials(body.username, body.password);
         let token = await user.generateAuthToken();
-        res.header(process.env.AUTH_HEADER, token).send(user);
+        res.header(process.env.AUTH_HEADER, token).send(user.toJSONWithTokens());
     } catch (error) {
         res.status(400).send(error);
     }

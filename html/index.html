@@ -37,10 +37,10 @@
             </div>
         </form>
 
-        <div class="bookings">
+        <div class="bookings hidden">
             <button class="btn btn-lg btn-primary" id="btn-get-bookings">TẢI BOOKING</button>
             <button class="btn btn-lg btn-success" id="btn-add-booking" data-toggle="modal" data-target="#myModal">THÊM BOOKING</button>
-            <div class="table-responsive hidden">
+            <div class="table-responsive">
                 <table class="table table-striped table-bookings">
                     <thead>
                         <th>Mã booking</th>
@@ -112,7 +112,7 @@
                 dataType: 'json'
             }).done(function(data, status, xhr) {
                 $('#login-form').hide();
-                $('.table-responsive').removeClass('hidden');
+                $('.bookings').removeClass('hidden');
                 authToken = data.tokens[0].token;
                 getBookings();
             });

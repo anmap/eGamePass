@@ -6,6 +6,8 @@ const { auth } = require('./../middlewares/auth');
 const { Booking } = require('./../db/models/booking');
 const { User } = require('./../db/models/user');
 
+const { createPDFBooking } = require('./../utilities/pdf_booking');
+
 let bookingsRoutes = express.Router();
 
 bookingsRoutes.post('/', auth, async (req, res) => {
@@ -13,7 +15,6 @@ bookingsRoutes.post('/', auth, async (req, res) => {
 
     try {
         let bookingCodes = await Booking.getAllBookingCodes();
-        console.log('All current booking codes', bookingCodes);
         let bookingCode;
         do {
             bookingCode = Booking.generateBookingCode();
@@ -23,6 +24,8 @@ bookingsRoutes.post('/', auth, async (req, res) => {
         body._creator = req.user._id;
 
         let booking = await new Booking(body).save();
+        booking = booking.toJSON();
+        booking.creatorInfo = await User.findById(booking._creator, '-_id username name');
         res.send(booking);
 
     } catch (error) {
@@ -56,6 +59,26 @@ bookingsRoutes.get('/:id', auth, async (req, res) => {
         booking.creatorInfo = await User.findById(booking._creator, '-_id username name');
         res.send(booking);
     } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+bookingsRoutes.get('/pdf/:id', async (req, res) => {
+    let bookingId = req.params.id;
+
+    if (!ObjectID.isValid(bookingId)) {
+        return res.status(404).send();
+    }
+
+    try {
+        let booking = await Booking.findById(bookingId).lean();
+        if (!booking) {
+            console.log('Booking not found')
+            return new Error();
+        }
+        createPDFBooking(res, booking.name, booking.email || null, booking.tel || null, booking.numberOfTickets, booking.bookingCode);
+    } catch (error) {
+        console.log(error)
         res.status(400).send(error);
     }
 });

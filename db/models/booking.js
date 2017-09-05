@@ -18,10 +18,12 @@ const BookingSchema = new mongoose.Schema({
         //     validator: validator.isEmail,
         //     message: `Not a valid email`
         // }
+        sparse: true
     },
     tel: {
         type: Number,
-        unique: true
+        unique: true,
+        sparse: true
     },
     numberOfTickets: {
         type: Number,

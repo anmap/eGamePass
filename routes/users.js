@@ -38,8 +38,9 @@ usersRoutes.post('/login', async (req, res) => {
         } else {
             token = user.tokens[0].token;
         }
-        
-        res.header(process.env.AUTH_HEADER, token).send(user.toJSONWithTokens());
+
+       // res.header(process.env.AUTH_HEADER, token).send(user.toJSONWithTokens());
+       res.send(user.toJSONWithTokens());
     } catch (error) {
         console.log(error);
         res.status(400).send(error);

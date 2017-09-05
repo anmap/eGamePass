@@ -118,7 +118,7 @@ const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) =
     let date = new Date();
     let month = date.getMonth() + 1;
     doc
-    .text('Helsinki, ' + date.getDate() + '.' + (month < 10 ? "0" + month : month) + '.' + date.getFullYear(), {
+    .text('Helsinki, ' + (date.getDate() < 10 ? "0" + date.getDate() : date.getDate()) + '.' + (month < 10 ? "0" + month : month) + '.' + date.getFullYear(), {
         align: 'right'
     })
     .text('BAN TỔ CHỨC', { 

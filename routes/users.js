@@ -20,7 +20,7 @@ usersRoutes.post('/', async (req, res) => {
         res.header(process.env.AUTH_HEADER, token).send(user);
     } catch (error) {
         console.log(error);
-        res.status(400).send(error);
+        res.status(400).send(error)
     }
 });
 
@@ -31,16 +31,13 @@ usersRoutes.post('/login', async (req, res) => {
         if (!user) {
             return new Error();
         }
-
         let token;
         if (user.tokens.length === 0) {
             token = await user.generateAuthToken();
         } else {
             token = user.tokens[0].token;
         }
-
-       // res.header(process.env.AUTH_HEADER, token).send(user.toJSONWithTokens());
-       res.send(user.toJSONWithTokens());
+        res.header(process.env.AUTH_HEADER, token).send(user.toJSONWithTokens());
     } catch (error) {
         console.log(error);
         res.status(400).send(error);

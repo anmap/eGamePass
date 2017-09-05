@@ -21,7 +21,7 @@ const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) =
     doc.registerFont('VKOYS', 'fonts/Asap/Asap-Regular.ttf');
     doc.registerFont('VTTT-title', 'fonts/Pacifico/Pacifico-Regular.ttf');
     doc.registerFont('document-bold', 'fonts/FiraSans/FiraSans-Bold.ttf');
-    doc.registerFont('document-italic', 'fonts/FiraSans/FiraSans-italic.ttf');
+    doc.registerFont('document-italic', 'fonts/FiraSans/FiraSans-Italic.ttf');
     doc.registerFont('document', 'fonts/FiraSans/FiraSans-Regular.ttf');
     doc.registerFont('code', 'fonts/ShareTechMono/ShareTechMono-Regular.ttf');
 

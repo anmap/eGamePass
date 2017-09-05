@@ -16,8 +16,8 @@ usersRoutes.post('/', async (req, res) => {
         let body = _.pick(req.body, ['username', 'name', 'password']);
         let user = new User(body);
         await user.save();
-        let token = await user.generateAuthToken();   
-        res.header("x-vkoys-vttt-auth", token).send(user);
+        let token = await user.generateAuthToken();       
+        res.header(process.env.AUTH_HEADER, token).send(user);
     } catch (error) {
         console.log(error);
         res.status(400).send(error)
@@ -37,7 +37,7 @@ usersRoutes.post('/login', async (req, res) => {
         } else {
             token = user.tokens[0].token;
         }
-        res.header("x-vkoys-vttt-auth", token).send(user.toJSONWithTokens());
+        res.header(process.env.AUTH_HEADER, token).send(user.toJSONWithTokens());
     } catch (error) {
         console.log(error);
         res.status(400).send(error);

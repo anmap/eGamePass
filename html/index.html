@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Vầng trăng tuổi thơ - Login</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js" integrity="sha256-NjbogQqosWgor0UBdCURR5dzcvAgHnfUZMcZ8RCwkk8=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Vầng trăng tuổi thơ</h1>
+        <h4 class="text-center">TEMPORARY BOOKING MANAGEMENT SYSTEM</h4>
+        <br><br><br>
+        <form id="login-form">
+            <div class="input-group col-xs-4 col-xs-offset-4">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+              <input id="username" type="text" class="form-control" name="username" placeholder="Username">
+            </div>
+            <br>
+            <div class="input-group col-xs-4 col-xs-offset-4">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+              <input id="password" type="password" class="form-control" name="password" placeholder="Password">
+            </div>
+            <br>
+            <div class="input-group col-xs-4 col-xs-offset-4">
+                <button type="submit" id="btn-login" class="btn btn-primary btn-block">LOGIN</button>
+            </div>
+        </form>
+
+        <div class="table-responsive hidden">
+            <button class="btn btn-lg btn-primary" id="btn-get-bookings">TẢI BOOKING</button>
+            <button class="btn btn-lg btn-success" id="btn-add-booking" data-toggle="modal" data-target="#myModal">THÊM BOOKING</button>
+            <br>
+            <table class="table table-striped table-bookings">
+                <thead>
+                    <th>Mã booking</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Số ĐT</th>
+                    <th>Số lượng</th>
+                    <th>Thêm vào bởi</th>
+                    <th>PDF</th>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade add-booking" id="myModal" role="dialog">
+        <form>
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Thêm Booking</h4>
+                </div>
+                <div class="modal-body">                    
+                    <div class="input-group">
+                        <input id="name" type="text" class="form-control" name="name" placeholder="Họ tên" required>
+                    </div>
+                    <div class="input-group">
+                        <input id="email" type="email" class="form-control" name="email" placeholder="Email">
+                    </div>
+                    <div class="input-group">
+                        <input id="tel" type="number" min="0" class="form-control" name="tel" placeholder="Số điện thoại">
+                    </div>
+                    <div class="input-group">
+                        <input id="number-of-tickets" type="number" min="1" step="1" class="form-control" name="number-of-tickets" placeholder="Số lượng vé" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="send-booking">Thêm booking</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
+                </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    var authToken;
+    //var host = 'http://localhost:7805/';
+    var host = '';
+
+    $(document).ready(function() {
+        
+
+        $('#btn-login').on('click', function(e) {
+            e.preventDefault();
+            var loginCredentials = {
+                username: $('#username').val(),
+                password: $('#password').val()
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: host + 'users/login',
+                data: JSON.stringify(loginCredentials),
+                contentType: "application/json",
+                dataType: 'json'
+            }).done(function(data, status, xhr) {
+                $('#login-form').hide();
+                $('.table-responsive').removeClass('hidden');
+                authToken = data.tokens[0].token;
+                getBookings();
+            });
+        });
+
+        $('#btn-get-bookings').on('click', function() {
+            $('.table-bookings tbody').html('');
+            getBookings();
+        });
+
+        $('#send-booking').on('click', function(e) {
+            e.preventDefault();
+            var bookingData = {
+                name: $('#name').val(),
+                numberOfTickets:  $('#number-of-tickets').val()
+            }
+
+            var email = $('#email').val() || null; 
+            var tel =  $('#tel').val() || null;
+
+            if (email) bookingData.email = email;
+            if (tel) bookingData.tel = tel;
+
+            addBooking(bookingData);
+        });
+        
+    });
+
+    function addBooking(bookingData) {
+        $.ajax({
+                type: 'POST',
+                url: host + 'bookings',
+                data: JSON.stringify(bookingData),
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": authToken
+                }
+            }).done(function(data, status, xhr) {
+                $('#name #email #tel #number-of-tickets').val('');
+                $('.add-booking').modal('hide');
+                renderBooking(data);
+            });
+    }
+
+    function getBookings() {
+        $.ajax({
+            type: 'GET',
+            url: host + 'bookings',
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+                "x-vkoys-vttt-auth": authToken
+            }
+        }).done(function(bookings, status, xhr) {
+            bookings.forEach(function(booking) {
+                renderBooking(booking);
+            });
+        });
+    }
+
+    function renderBooking(booking) {
+        var bookingCell = `
+        <tr id="${booking._id}">
+            <td>${booking.bookingCode}</td>
+            <td>${booking.name}</td>
+            <td>${booking.email || 'N/A'}</td>
+            <td>${booking.tel || 'N/A'}</td>
+            <td>${booking.numberOfTickets}</td>
+            <td>${booking.creatorInfo.name}</td>
+            <td><a target="_blank" href="${host}bookings/pdf/${booking._id}"><button class="btn btn-sm btn-primary">Xuất PDF</button></a></td>
+        </tr>
+        `;
+
+        $('.table-bookings tbody').append(bookingCell);
+    }
+    </script>
+</body>
+</html>

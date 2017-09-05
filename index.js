@@ -28,7 +28,7 @@ const allowCrossDomain = function(req, res, next) {
 
 // Setup express and middlewares
 let app = express();
-app.use(allowCrossDomain);
+app.pre(allowCrossDomain);
 app.use(bodyParser.json()); // Configure app to use JSON
 
 // Routes

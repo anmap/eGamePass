@@ -69,6 +69,7 @@ const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) =
         .font('document')
         .text(email);
     } else if (tel) {
+        tel = "0" + tel;
         let formattedTel = [tel.slice(0, 3), " ", tel.slice(3,6), " ", tel.slice(6)].join('');
         doc
         .font('document-bold')

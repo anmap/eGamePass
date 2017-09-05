@@ -78,7 +78,7 @@ const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) =
     } else {
         doc
         .font('document-italic')
-        .text('Không có thông tin liên lạc', { continued: true });
+        .text('Không có thông tin liên lạc');
     }
     
     doc

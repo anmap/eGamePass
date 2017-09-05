@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "API system for VKOYS \"Vầng Trăng Tuổi Thơ\" event",
   "main": "index.js",
+  "engines": {
+    "node": ">= 7.6.0"
+  },
   "scripts": {
     "start": "node index.js",
     "start-watch": "nodemon index.js",

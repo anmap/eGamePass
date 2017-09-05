@@ -14,12 +14,12 @@ usersRoutes.get('/', async (req, res) => {
 usersRoutes.post('/', async (req, res) => {    
     try {
         let body = _.pick(req.body, ['username', 'name', 'password']);
-        console.log('body', body)
         let user = new User(body);
         await user.save();
         let token = await user.generateAuthToken(); 
         res.header(process.env.AUTH_HEADER, token).send(user);
     } catch (error) {
+        console.log(error);
         res.status(400).send(error)
     }
 });
@@ -31,6 +31,7 @@ usersRoutes.post('/login', async (req, res) => {
         let token = await user.generateAuthToken();
         res.header(process.env.AUTH_HEADER, token).send(user.toJSONWithTokens());
     } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 });
@@ -44,6 +45,7 @@ usersRoutes.delete('/logout', auth, async (req, res) => {
         await req.user.removeToken(req.token)
         res.send();
     } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 });

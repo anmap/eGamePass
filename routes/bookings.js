@@ -29,6 +29,7 @@ bookingsRoutes.post('/', auth, async (req, res) => {
         res.send(booking);
 
     } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 });
@@ -43,6 +44,7 @@ bookingsRoutes.get('/', auth, async (req, res) => {
 
         res.send(bookings);
     } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 });
@@ -59,6 +61,7 @@ bookingsRoutes.get('/:id', auth, async (req, res) => {
         booking.creatorInfo = await User.findById(booking._creator, '-_id username name');
         res.send(booking);
     } catch (error) {
+        console.log(error);
         res.status(400).send(error);
     }
 });

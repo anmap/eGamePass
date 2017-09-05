@@ -20,7 +20,7 @@ usersRoutes.post('/', async (req, res) => {
         res.header(process.env.AUTH_HEADER, token).send(user);
     } catch (error) {
         console.log(error);
-        res.status(400).send(error)
+        res.status(400).send(error);
     }
 });
 

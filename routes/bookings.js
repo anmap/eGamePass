@@ -58,6 +58,10 @@ bookingsRoutes.get('/:id', auth, async (req, res) => {
 
     try {
         let booking = await Booking.findById(bookingId).lean();
+        if (!booking) {
+            return res.status(404).send();
+        }
+
         booking.creatorInfo = await User.findById(booking._creator, '-_id username name');
         res.send(booking);
     } catch (error) {
@@ -76,8 +80,7 @@ bookingsRoutes.get('/pdf/:id', async (req, res) => {
     try {
         let booking = await Booking.findById(bookingId).lean();
         if (!booking) {
-            console.log('Booking not found')
-            return new Error();
+            return res.status(404).send();
         }
         createPDFBooking(res, booking.name, booking.email || null, booking.tel || null, booking.numberOfTickets, booking.bookingCode);
     } catch (error) {

@@ -12,7 +12,6 @@ const BookingSchema = new mongoose.Schema({
     email: {
         type: String,
         trim: true,
-        //minlength: 1,
         unique: true,
         // validate: {
         //     validator: validator.isEmail,
@@ -44,12 +43,13 @@ const BookingSchema = new mongoose.Schema({
 
 // Statics methods
 BookingSchema.statics.getAllBookingCodes = async function() {
-    let User = this;
+    let Booking = this;
 
     try {
         let bookingCodes = await Booking.find({}, '-_id bookingCode');
         return _.map(bookingCodes, obj => obj.bookingCode);
     } catch (error) {
+        console.log(error);
         return Promise.reject();
     }
 }

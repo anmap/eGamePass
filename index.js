@@ -19,13 +19,15 @@ app.use(bodyParser.json()); // Configure app to use JSON
 // Routes
 app.use('/users', require('./routes/users'));
 app.use('/bookings', require('./routes/bookings'));
+app.use('/tickets', require('./routes/tickets'));
+app.use('/players', require('./routes/players'));
 
 
 // Setup static page
-app.use(express.static(path.join(__dirname, 'html')));
-app.use('/', (req, res) => {
-    res.render('index.html');
-});
+app.use('/', express.static(path.join(__dirname, 'html')));
+// app.use('/', (req, res) => {
+//     res.render('index.html');
+// });
 
 // Run app on specified PORT (from config.js)
 app.listen(process.env.PORT, () => {

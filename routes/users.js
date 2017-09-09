@@ -29,7 +29,7 @@ usersRoutes.post('/login', async (req, res) => {
         let body = _.pick(req.body, ['username', 'password']);
         let user = await User.findByCredentials(body.username, body.password);
         if (!user) {
-            return new Error();
+            return res.status(404).send();
         }
         let token;
         if (user.tokens.length === 0) {

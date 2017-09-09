@@ -23,7 +23,12 @@ const UserSchema = new mongoose.Schema({
         required: true,
         minlength: 8
     },
-    roles: [],
+    roles: [{
+        roleId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        }
+    }],
     tokens: [{
         access: {
             type: String,

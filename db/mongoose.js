@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const { MONGODB_URI } = require('./../config')
 
-// Setup promise for mongoose
+// Plugin native promises for mongoose;
 mongoose.Promise = global.Promise;
 
 // Connect to database

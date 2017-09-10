@@ -22,7 +22,7 @@ ticketsRoutes.get('/', auth, async (req, res) => {
 ticketsRoutes.get('/:serialNumber', auth, async (req, res) => {
     try {
         // Get ticket info
-        let serialNumber = req.params.serialNumber;
+        let serialNumber = req.params.serialNumber.toUpperCase();
         let ticket = await Ticket.findOne({ serialNumber }).lean();
         if (!ticket) {
             return res.status(404).send();

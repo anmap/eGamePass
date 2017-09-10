@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Trưởng trạm - Vầng trăng tuổi thơ</title>
+
+    <script src="scripts/roles.js"></script>
+    
+    <script>    
+    // Check LocalStorage
+    if (typeof(Storage) === "undefined") {
+        $(document).html('<h1 class="text-center text-danger">No LocalStorage support!</h1>')
+    }
+
+    // Check LocalStorage Data
+    // Check LocalStorage Data
+    if (!localStorage.authToken ||
+        ([ROLES.ADMIN, ROLES.GAME_STANDER]).indexOf(localStorage.role) === -1) {
+        window.location = 'index.html';
+    }
+    </script>
+
+   <!-- Latest compiled and minified CSS -->
+   <link rel="stylesheet" href="styles/bootstrap.min.css">
+   <!-- Optional theme -->
+   <link rel="stylesheet" href="styles/bootstrap-theme.min.css">
+
+   <style>
+       .video-center {
+            margin-left: auto;
+            margin-right: auto;
+            display: block
+        }
+   </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">VẦNG TRĂNG TUỔI THƠ</h1>
+        <h4 class="text-center">TRƯỞNG TRẠM</h4>
+        <video id="scanner" class="video-center"></video>      
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="ticket-info" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Thông tin vé</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success" id="charge">VÀO TRẠM</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import JS libraries and scripts -->
+    <script src="scripts/jquery-1.12.4.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+    <script src="scripts/instascan.min.js"></script>
+    <script src="scripts/code-validate.js"></script>
+    <!-- Own scripts -->
+    <script>
+    var qrOpts = {
+        continuous: true,
+        video: document.getElementById('scanner'),
+        backgroundScan: false,
+        refractoryPeriod: 5000
+    }
+
+    var currentPlayerId;
+
+    $(document).ready(function() {
+        let scanner = new Instascan.Scanner(qrOpts);
+
+        scanner.addListener('scan', function (code) {
+            var ticket = getCode(code);
+
+            if (ticket) {
+                getInfo(ticket.code);
+            }
+        });
+
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 1) {
+                scanner.start(cameras[1]);
+            } else if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            } else {
+                $(document).html('<h1 class="text-center text-danger">Không tìm thấy camera nào!</h1>')
+            }
+        }).catch(function (e) {
+            console.error(e);
+        });
+
+        $('#ticket-info').on('hidden.bs.modal', function () {
+            $('#ticket-info .modal-body').html('');
+            $('#charge').show();
+        });
+
+        $('#charge').on('click', function() {
+            charge(currentPlayerId);
+        });
+    });
+
+    function charge(playerId) {
+        if (!playerId) return console.log('No playerId supplied');
+
+        $.ajax({
+                type: 'PATCH',
+                url: 'players/' + playerId + '/games/charge',
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": localStorage.authToken
+                }
+            }).done(function(data) {
+                currentPlayerId = null;
+                $('#ticket-info').modal('hide');
+            });
+    }
+
+    function getInfo(ticket) {
+        $.ajax({
+            type: 'GET',
+            url: 'tickets/' + ticket,
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+                "x-vkoys-vttt-auth": localStorage.authToken
+            }
+        }).done(function(ticket) {
+            var chargeable = true;
+
+            $('#ticket-info .modal-body').append(`
+                <label class="control-label" for="serial-number">Mã vé:</label>
+                <p id="player-name">${ticket.serialNumber}</p>
+            `);
+            
+            if (ticket._player && ticket.playerInfo) {
+                currentPlayerId = ticket._player;
+
+                $('#ticket-info .modal-body').append(`
+                    <label class="control-label" for="player-name">Người chơi:</label>
+                    <p id="player-name">${ticket.playerInfo.name}
+                        <em>${ ticket.playerInfo.games.initLock ? "(Chưa chơi qua tất cả các trò)" : "" }</em></p>
+                `);
+
+                var remainingCredits = ticket.playerInfo.games.credit - ticket.playerInfo.games.used;
+
+                $('#ticket-info .modal-body').append(`
+                <label class="control-label" for="remaining-credits">Số lượt còn lại:</label>
+                `);
+
+                if (remainingCredits > 1) {
+                    $('#ticket-info .modal-body').append(`
+                        
+                        <strong><h4 class="text-success">${remainingCredits}</h4></strong>
+                    `);
+                } else if (remainingCredits === 1) {
+                    $('#ticket-info .modal-body').append(`
+                        <strong><h4 class="text-warning">${remainingCredits}</h4></strong>
+                    `);
+                } else {
+                    $('#ticket-info .modal-body').append(`
+                        <strong><h4 class="text-danger">ĐÃ HẾT LƯỢT CHƠI</h4></strong>
+                    `);
+                    chargeable = false;
+                }
+            } else {
+                chargeable = false;
+
+                $('#ticket-info .modal-body').append(`
+                    <strong><h4 class="text-danger">THẺ CHƯA ĐƯỢC LIÊN KẾT VỚI NGƯỜI CHƠI NÀO</h4></strong>
+                `);
+            }
+
+            if (!chargeable) {
+                $('#charge').hide();
+            }
+
+            $('#ticket-info').modal('show');
+        });
+    }
+    </script>
+</body>
+</html>

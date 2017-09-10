@@ -24,7 +24,7 @@ app.use('/players', require('./routes/players'));
 
 
 // Setup static page
-app.use('/', express.static(path.join(__dirname, 'html')));
+app.use('/', express.static(path.join(__dirname, 'statics')));
 // app.use('/', (req, res) => {
 //     res.render('index.html');
 // });

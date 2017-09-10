@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
+const { GAMES } = require('./../../config/games');
+
 // Setup UserSchema
 const UserSchema = new mongoose.Schema({
     username: {
@@ -23,12 +25,14 @@ const UserSchema = new mongoose.Schema({
         required: true,
         minlength: 8
     },
-    roles: [{
-        roleId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true
-        }
-    }],
+    role: {
+        type: String,
+        required: true,
+        default: 'unassigned'
+    },
+    game: {
+        type: String
+    },
     tokens: [{
         access: {
             type: String,
@@ -46,7 +50,7 @@ UserSchema.methods.toJSON = function() {
     let user = this;
     let userObject = user.toObject();
 
-    return _.pick(userObject, ['_id', 'username', 'name']);
+    return _.pick(userObject, ['_id', 'username', 'name', 'role']);
 };
 
 // Define custom instance methods
@@ -54,7 +58,12 @@ UserSchema.methods.toJSONWithTokens = function() {
     let user = this;
     let userObject = user.toObject();
 
-    return _.pick(userObject, ['_id', 'username', 'name', 'tokens']);
+    let returnedObj = _.pick(userObject, ['_id', 'username', 'name', 'tokens', 'role']);
+    if (user.game) {
+        returnedObj.game = GAMES[user.game];
+    }
+
+    return returnedObj;
 };
 
 UserSchema.methods.generateAuthToken = function() {

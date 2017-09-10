@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Vầng trăng tuổi thơ</title>
+
+    <script src="scripts/roles.js"></script>
+    
+    <script>    
+    // Check LocalStorage
+    if (typeof(Storage) === "undefined") {
+        $(document).html('<h1 class="text-center text-danger">No LocalStorage support!</h1>')
+    }
+
+    // Check LocalStorage Data
+    if (localStorage.authToken && localStorage.role) {
+        redirectToRole(localStorage.role);
+    }
+
+    function redirectToRole(role) {
+        switch (localStorage.role) {
+            case ROLES.BOOKER:
+                window.location = 'booking.html';
+                break;
+
+            case ROLES.BOOKING_CHECKER:
+                window.location = 'booking_check.html';
+                break;
+
+            case ROLES.TICKET_SELLER:
+                window.location = 'ticket_selling.html';
+                break;
+
+            case ROLES.GAME_STANDER:
+                window.location = 'game_stand.html';
+                break;
+
+            case ROLES.FOOD_STANDER:
+                window.location = 'food_stand.html';
+                break;
+        }
+    }
+    </script>
+
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="styles/bootstrap.min.css">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="styles/bootstrap-theme.min.css">  
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Vầng trăng tuổi thơ</h1>
+        <h4 class="text-center">EVENT MANAGEMENT BETA SYSTEM</h4>
+        <br><br><br>
+        <form id="login-form">
+            <div class="input-group col-sm-4 col-sm-offset-4">
+              <input id="username" type="text" class="form-control" name="username" placeholder="Username">
+            </div>
+            <br>
+            <div class="input-group col-sm-4 col-sm-offset-4">
+              <input id="password" type="password" class="form-control" name="password" placeholder="Password">
+            </div>
+            <br>
+            <div class="input-group col-sm-4 col-sm-offset-4">
+                <button type="submit" id="btn-login" class="btn btn-primary btn-block">LOGIN</button>
+            </div>
+        </form>
+        <br>
+        <div class="row btn-func hidden">
+            <button class="col-xs-12 col-sm-2 btn btn-primary">QUẦY VÉ</button>
+            <button class="col-xs-12 col-sm-offset-1  col-sm-2 btn btn-primary">TRƯỞNG TRẠM</button>
+            <button class="col-xs-12 col-sm-offset-1  col-sm-3 btn btn-primary">THỰC PHẨM</button>
+            <button class="col-xs-12 col-sm-offset-1 col-sm-2 btn btn-primary">KIỂM TRA BOOKING</button>
+        </div>
+
+    </div>
+
+    <!-- Import JS libraries and scripts -->
+    <script src="scripts/jquery-1.12.4.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+    <!-- Own scripts -->
+    <script>
+        $(document).ready(function() {
+            $('#btn-login').on('click', function(e) {
+                console.log('login')
+
+                e.preventDefault();
+                var loginCredentials = {
+                    username: $('#username').val(),
+                    password: $('#password').val()
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'users/login',
+                    data: JSON.stringify(loginCredentials),
+                    contentType: "application/json",
+                    dataType: 'json'
+                }).done(function(data, status, xhr) {
+                    $('#login-form .btn-func').toggleClass('hidden');
+                    localStorage.authToken = data.tokens[0].token;
+                    localStorage.role = data.role;
+                    localStorage.username = data.username;
+                    localStorage.name = data.name;
+                    if (data.game) {
+                        localStorage.game = data.game.code;
+                        localStorage.gameDesc = data.game.desc;
+                    }
+                    redirectToRole(data.role);
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>

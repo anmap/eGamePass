@@ -6,13 +6,12 @@ const { removeVNMarks } = require('./../utilities/utils');
 const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) => {
     const size = 'a4';
 
-    console.log(`Đang xuất ra PDF theo khổ ${size.toUpperCase()}...`)
+    console.log(`Export PDF for booking ${bookingCode}...`);
 
     // Setup document
     const doc = new PDFDocument({ size });
     // Setup output stream
     let nameWithoutMarks = removeVNMarks(name).split(' ').join('_').toUpperCase();
-    //console.log(`Xuất ra tại: bookings/${bookingCode}-${nameWithoutMarks}.pdf`);
     res.setHeader('Content-disposition', 'inline; filename="' + bookingCode + '-' + nameWithoutMarks + '.pdf"');
     res.setHeader('Content-type', 'application/pdf');
     let stream = doc.pipe(res);
@@ -161,7 +160,6 @@ const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) =
 
     // Finalize PDF file
     doc.end();
-    console.log('Đã hoàn tất!')
 }
 
 module.exports = { createPDFBooking };

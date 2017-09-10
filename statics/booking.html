@@ -4,40 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Vầng trăng tuổi thơ</title>
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <title>Hệ thống đặt vé - Vầng trăng tuổi thơ</title>
 
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js" integrity="sha256-NjbogQqosWgor0UBdCURR5dzcvAgHnfUZMcZ8RCwkk8=" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="scripts/roles.js"></script>
     
+    <script>    
+    // Check LocalStorage
+    if (typeof(Storage) === "undefined") {
+        $(document).html('<h1 class="text-center text-danger">No LocalStorage support!</h1>')
+    }
+
+    // Check LocalStorage Data
+    // Check LocalStorage Data
+    if (!localStorage.authToken ||
+        ([ROLES.ADMIN, ROLES.BOOKER]).indexOf(localStorage.role) === -1) {
+        window.location = 'index.html';
+    }
+    </script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="styles/bootstrap.min.css">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="styles/bootstrap-theme.min.css">   
 </head>
 <body>
     <div class="container">
         <h1 class="text-center">Vầng trăng tuổi thơ</h1>
-        <h4 class="text-center">TEMPORARY BOOKING MANAGEMENT SYSTEM</h4>
+        <h4 class="text-center">HỆ THỐNG ĐẶT VÉ</h4>
         <br><br><br>
-        <form id="login-form">
-            <div class="input-group col-sm-4 col-sm-offset-4">
-              <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-              <input id="username" type="text" class="form-control" name="username" placeholder="Username">
-            </div>
-            <br>
-            <div class="input-group col-sm-4 col-sm-offset-4">
-              <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-              <input id="password" type="password" class="form-control" name="password" placeholder="Password">
-            </div>
-            <br>
-            <div class="input-group col-sm-4 col-sm-offset-4">
-                <button type="submit" id="btn-login" class="btn btn-primary btn-block">LOGIN</button>
-            </div>
-        </form>
 
-        <div class="bookings hidden">
+        <div class="bookings">
             <button class="btn btn-lg btn-primary" id="btn-get-bookings">TẢI BOOKING</button>
             <button class="btn btn-lg btn-success" id="btn-add-booking" data-toggle="modal" data-target="#myModal">THÊM BOOKING</button>
             <div class="table-responsive">
@@ -89,34 +85,17 @@
         </form>
     </div>
 
+
+
+    <!-- Import JS libraries and scripts -->
+    <script src="scripts/jquery-1.12.4.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+
+    <!-- Own scripts -->
     <script>
-    var authToken;
-    //var host = 'http://localhost:7805/';
-    var host = '';
-
     $(document).ready(function() {
-        
 
-        $('#btn-login').on('click', function(e) {
-            e.preventDefault();
-            var loginCredentials = {
-                username: $('#username').val(),
-                password: $('#password').val()
-            }
-
-            $.ajax({
-                type: 'POST',
-                url: host + 'users/login',
-                data: JSON.stringify(loginCredentials),
-                contentType: "application/json",
-                dataType: 'json'
-            }).done(function(data, status, xhr) {
-                $('#login-form').hide();
-                $('.bookings').removeClass('hidden');
-                authToken = data.tokens[0].token;
-                getBookings();
-            });
-        });
+        getBookings();
 
         $('#btn-get-bookings').on('click', function() {
             $('.table-bookings tbody').html('');
@@ -144,14 +123,14 @@
     function addBooking(bookingData) {
         $.ajax({
                 type: 'POST',
-                url: host + 'bookings',
+                url: 'bookings',
                 data: JSON.stringify(bookingData),
                 contentType: "application/json",
                 dataType: 'json',
                 headers: {
-                    "x-vkoys-vttt-auth": authToken
+                    "x-vkoys-vttt-auth": localStorage.authToken
                 }
-            }).done(function(data, status, xhr) {
+            }).done(function(data) {
                 $('#name #email #tel #number-of-tickets').val('');
                 $('.add-booking').modal('hide');
                 renderBooking(data);
@@ -161,13 +140,13 @@
     function getBookings() {
         $.ajax({
             type: 'GET',
-            url: host + 'bookings',
+            url: 'bookings',
             contentType: "application/json",
             dataType: 'json',
             headers: {
-                "x-vkoys-vttt-auth": authToken
+                "x-vkoys-vttt-auth": localStorage.authToken
             }
-        }).done(function(bookings, status, xhr) {
+        }).done(function(bookings) {
             bookings.forEach(function(booking) {
                 renderBooking(booking);
             });
@@ -183,7 +162,7 @@
             <td>${booking.tel || 'N/A'}</td>
             <td>${booking.numberOfTickets}</td>
             <td>${booking.creatorInfo.name}</td>
-            <td><a target="_blank" href="${host}bookings/pdf/${booking._id}"><button class="btn btn-sm btn-primary">Xuất PDF</button></a></td>
+            <td><a target="_blank" href="bookings/${booking._id}/pdf"><button class="btn btn-sm btn-primary">Xuất PDF</button></a></td>
         </tr>
         `;
 

@@ -17,7 +17,7 @@ const generateTickets = async (numberOfTickets) => {
     
             do {
                 newSerialNumber = generateSerialNumber();
-            } while (allSerialNumbers.indexOf(newSerialNumber) > -1);
+            } while (allSerialNumbers.indexOf(newSerialNumber) > -1 && newSerialNumbers.indexOf(newSerialNumber) > -1);
     
             newSerialNumbers.push({ serialNumber: newSerialNumber });
         }

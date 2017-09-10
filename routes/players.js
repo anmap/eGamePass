@@ -7,16 +7,27 @@ const { Ticket } = require('./../db/models/ticket');
 const { Player } = require('./../db/models/player');
 const { User } = require('./../db/models/user');
 
+const { ROLES } = require('./../config/roles');
+
 let playersRoutes = express.Router();
 
 // Insert new player
 playersRoutes.post('/:ticketId', auth, async (req, res) => {
-    let ticketId = req.params.ticketId;
-
-    let body = _.pick(req.body, ['name', 'age']);
-    body._creator = req.user._id;
+    // Access level check (hardcoded)
+    if ([ROLES.ADMIN, ROLES.TICKET_SELLER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }  
 
     try {
+        let ticketId = req.params.ticketId;
+
+        if (!ObjectID.isValid(ticketId)) {
+            return res.status(400).send();
+        }
+        
+        let body = _.pick(req.body, ['name', 'age']);
+        body._creator = req.user._id;
+
         // Get ticket info
         let ticket = await Ticket.findById(ticketId);
 
@@ -52,6 +63,11 @@ playersRoutes.post('/:ticketId', auth, async (req, res) => {
 
 // Get all players info
 playersRoutes.get('/', auth, async (req, res) => {
+    // Access level check (hardcoded)
+    if ([ROLES.ADMIN, ROLES.TICKET_SELLER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }
+
     try {
         let players = await Player.find({});
         res.send(players);
@@ -62,10 +78,15 @@ playersRoutes.get('/', auth, async (req, res) => {
 });
 
 // Get player info with id
-playersRoutes.get('/:id', auth, async (req, res) => {
+playersRoutes.get('/:id', auth, async (req, res) => {    
+    let playerId = req.params.id;
+    
+    if (!ObjectID.isValid(playerId)) {
+        return res.status(400).send();
+    }
+
     try {
         // Get player info
-        let playerId = req.params.id;
         let player = await Player.findById(playerId).lean();
         if (!player) {
             return res.status(404).send();
@@ -89,13 +110,30 @@ playersRoutes.get('/:id', auth, async (req, res) => {
 
 // Charge 1 credit for games
 playersRoutes.patch('/:id/games/charge', auth, async (req, res) => {
+    // Access level check (hardcoded)
+    if ([ROLES.ADMIN, ROLES.GAME_STANDER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }
+
+    let playerId = req.params.id;
+    
+    if (!ObjectID.isValid(playerId)) {
+        return res.status(400).send();
+    }
+
     try {
-        let playerId = req.params.id;
+        // Check player credits
+        let player = await Player.findById(playerId);
+
+        if ((player.games.credit - player.games.used) < 1) {
+            return res.status(400).send(`${player.name} (ID: ${player._id}) đã hết lượt chơi.`);
+        }
+
         let updatedPlayer = await Player.findByIdAndUpdate(playerId, {
             $inc: {
                 "games.used": 1
             }
-        });
+        }, { new: true });
 
         if (!updatedPlayer) {
             return res.status(404).send();
@@ -110,15 +148,24 @@ playersRoutes.patch('/:id/games/charge', auth, async (req, res) => {
 
 // Deposit credit for games
 playersRoutes.patch('/:id/games/deposit/:credit', auth, async (req, res) => {
-    try {
-        let playerId = req.params.id;
-        let numberOfCredits = req.params.credit;
+    // Access level check (hardcoded)
+    if ([ROLES.ADMIN, ROLES.TICKET_SELLER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }
 
+    let playerId = req.params.id;
+    let numberOfCredits = req.params.credit;
+
+    if (!ObjectID.isValid(playerId) || isNaN(numberOfCredits)) {
+        return res.status(400).send();
+    }
+
+    try {
         let updatedPlayer = await Player.findByIdAndUpdate(playerId, {
             $inc: {
                 "games.credit": numberOfCredits
             }
-        });
+        }, { new: true });
         
         if (!updatedPlayer) {
             return res.status(404).send();
@@ -133,13 +180,30 @@ playersRoutes.patch('/:id/games/deposit/:credit', auth, async (req, res) => {
 
 // Charge 1 credit for food
 playersRoutes.patch('/:id/food/charge', auth, async (req, res) => {
+    // Access level check (hardcoded)
+    if ([ROLES.ADMIN, ROLES.FOOD_STANDER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }
+
+    let playerId = req.params.id;
+    
+    if (!ObjectID.isValid(playerId)) {
+        return res.status(400).send();
+    }
+
     try {
-        let playerId = req.params.id;
+        // Check player credits
+        let player = await Player.findById(playerId);
+        
+        if ((player.food.credit - player.food.used) < 1) {
+            return res.status(400).send(`${player.name} (ID: ${player._id}) đã hết lượt ăn.`);
+        }
+
         let updatedPlayer = await Player.findByIdAndUpdate(playerId, {
             $inc: {
                 "food.used": 1
             }
-        });
+        }, { new: true });
 
         if (!updatedPlayer) {
             return res.status(404).send();
@@ -154,15 +218,25 @@ playersRoutes.patch('/:id/food/charge', auth, async (req, res) => {
 
 // Deposit credit for food
 playersRoutes.patch('/:id/food/deposit/:credit', auth, async (req, res) => {
-    try {
-        let playerId = req.params.id;
-        let numberOfCredits = req.params.credit;
+    // Access level check (hardcoded)
+    if ([ROLES.ADMIN, ROLES.TICKET_SELLER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }
 
-        let updatedPlayer =await Player.findByIdAndUpdate(playerId, {
+    let playerId = req.params.id;
+    let numberOfCredits = req.params.credit;
+
+    if (!ObjectID.isValid(playerId) || isNaN(numberOfCredits)) {
+        return res.status(400).send();
+    }
+
+    try {
+
+        let updatedPlayer = await Player.findByIdAndUpdate(playerId, {
             $inc: {
                 "food.credit": numberOfCredits
             }
-        });
+        }, { new: true });
         
         if (!updatedPlayer) {
             return res.status(404).send();

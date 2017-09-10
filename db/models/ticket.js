@@ -21,6 +21,9 @@ const TicketSchema = new mongoose.Schema({
     },
     _player: {
         type: mongoose.Schema.Types.ObjectId
+    },
+    _booking: {
+        type: mongoose.Schema.Types.ObjectId
     }
 });
 

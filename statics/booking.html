@@ -31,7 +31,11 @@
     <div class="container">
         <h1 class="text-center">Vầng trăng tuổi thơ</h1>
         <h4 class="text-center">HỆ THỐNG ĐẶT VÉ</h4>
-        <br><br><br>
+        <br>
+        <div class="text-center">
+            <button id="btn-logout" class="btn btn-danger">Đăng xuất</button>
+        </div>
+        <br><br>
 
         <div class="bookings">
             <button class="btn btn-lg btn-primary" id="btn-get-bookings">TẢI BOOKING</button>
@@ -137,6 +141,20 @@
 
         $(document).on('click', '.delete-booking', function() {
             deleteBooking($(this).data('id'));
+        });
+
+        $('#btn-logout').on('click', function() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('username');
+            localStorage.removeItem('name');
+            localStorage.removeItem('role');
+            if (localStorage.game) {
+                localStorage.removeItem('game');
+            }
+            if (localStorage.gameDesc) {
+                localStorage.removeItem('gameDesc')
+            }
+            window.location = 'index.html';
         });
         
     });

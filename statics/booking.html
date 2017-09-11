@@ -93,6 +93,8 @@
 
     <!-- Own scripts -->
     <script>
+    var currentEditingBooking;
+
     $(document).ready(function() {
 
         getBookings();
@@ -118,6 +120,21 @@
             addBooking(bookingData);
         });
 
+        $('#add-booking').on('hidden.bs.modal', function () {
+            $('#name, #email, #tel, #number-of-tickets').val('');
+            currentEditingBooking = null;
+        });
+
+        $(document).on('click', '.edit-booking', function() {
+            currentEditingBooking = $(this).data('id');
+            var parent = $(this).parent().parent();
+            $('#name').val(parent.find('.booking-name').html());
+            $('#email').val(parent.find('.booking-email').html() !== 'N/A' ? parent.find('.booking-email').html() : '');
+            $('#tel').val(parent.find('.booking-tel').html() !== 'N/A' ? parent.find('.booking-tel').html() : '');
+            $('#number-of-tickets').val(parent.find('.booking-ticket').html());
+            $('#add-booking').modal('show');
+        });
+
         $(document).on('click', '.delete-booking', function() {
             deleteBooking($(this).data('id'));
         });
@@ -125,6 +142,11 @@
     });
 
     function addBooking(bookingData) {
+        if (currentEditingBooking) {
+            editBooking(currentEditingBooking, bookingData);
+            return;
+        }
+
         $.ajax({
                 type: 'POST',
                 url: 'bookings',
@@ -135,9 +157,29 @@
                     "x-vkoys-vttt-auth": localStorage.authToken
                 }
             }).done(function(data) {
-                $('#name #email #tel #number-of-tickets').val('');
-                $('.add-booking').modal('hide');
+                                
                 renderBooking(data);
+                $('#add-booking').modal('hide');
+            });
+    }
+
+    function editBooking(bookingId, bookingData) {
+        $.ajax({
+                type: 'PATCH',
+                url: 'bookings/' + bookingId,
+                data: JSON.stringify(bookingData),
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": localStorage.authToken
+                }
+            }).done(function(data) {
+                var editedBooking = $('#' + bookingId);
+                editedBooking.find('.booking-name').html(data.name);
+                editedBooking.find('.booking-email').html(data.email);
+                editedBooking.find('.booking-tel').html(data.tel);
+                editedBooking.find('.booking-ticket').html(data.numberOfTickets);
+                $('#add-booking').modal('hide');
             });
     }
 
@@ -161,10 +203,10 @@
         var bookingCell = `
         <tr id="${booking._id}">
             <td>${booking.bookingCode}</td>
-            <td>${booking.name}</td>
-            <td>${booking.email || 'N/A'}</td>
-            <td>${booking.tel || 'N/A'}</td>
-            <td>${booking.numberOfTickets}</td>
+            <td class="booking-name">${booking.name}</td>
+            <td class="booking-email">${booking.email || 'N/A'}</td>
+            <td class="booking-tel">${booking.tel || 'N/A'}</td>
+            <td class="booking-ticket">${booking.numberOfTickets}</td>
             <td>${booking.creatorInfo.name}</td>
             <td>
                 <a target="_blank" href="bookings/${booking._id}/pdf"><button class="btn btn-sm btn-primary">Xuất PDF</button></a>

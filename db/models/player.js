@@ -48,6 +48,9 @@ const PlayerSchema = new mongoose.Schema({
     _creator: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
+    },
+    _booking: {
+        type: mongoose.Schema.Types.ObjectId
     }
 });
 

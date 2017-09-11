@@ -48,6 +48,7 @@
                         <th>Email</th>
                         <th>Số ĐT</th>
                         <th>Số lượng</th>
+                        <th>Số vé đã trả tiền</th>
                         <th>Thêm vào bởi</th>
                         <th>Thao tác</th>
                     </thead>
@@ -78,6 +79,9 @@
                     </div>
                     <div class="input-group">
                         <input id="number-of-tickets" type="number" min="1" step="1" class="form-control" name="number-of-tickets" placeholder="Số lượng vé" required>
+                    </div>
+                    <div class="input-group">
+                        <input id="number-of-paid-tickets" value="0" type="number" min="1" step="1" class="form-control" name="number-of-paid-tickets" placeholder="Số lượng vé đã trả tiền" required>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -112,7 +116,8 @@
             e.preventDefault();
             var bookingData = {
                 name: $('#name').val(),
-                numberOfTickets:  $('#number-of-tickets').val()
+                numberOfTickets:  $('#number-of-tickets').val(),
+                numberOfPaidTickets:  $('#number-of-paid-tickets').val()
             }
 
             var email = $('#email').val() || null; 
@@ -126,6 +131,7 @@
 
         $('#add-booking').on('hidden.bs.modal', function () {
             $('#name, #email, #tel, #number-of-tickets').val('');
+            $('#number-of-paid-tickets').val(0);
             currentEditingBooking = null;
         });
 
@@ -136,6 +142,7 @@
             $('#email').val(parent.find('.booking-email').html() !== 'N/A' ? parent.find('.booking-email').html() : '');
             $('#tel').val(parent.find('.booking-tel').html() !== 'N/A' ? parent.find('.booking-tel').html() : '');
             $('#number-of-tickets').val(parent.find('.booking-ticket').html());
+            $('#number-of-paid-tickets').val(parent.find('.booking-paid-ticket').html());
             $('#add-booking').modal('show');
         });
 
@@ -148,12 +155,6 @@
             localStorage.removeItem('username');
             localStorage.removeItem('name');
             localStorage.removeItem('role');
-            if (localStorage.game) {
-                localStorage.removeItem('game');
-            }
-            if (localStorage.gameDesc) {
-                localStorage.removeItem('gameDesc')
-            }
             window.location = 'index.html';
         });
         
@@ -174,8 +175,7 @@
                 headers: {
                     "x-vkoys-vttt-auth": localStorage.authToken
                 }
-            }).done(function(data) {
-                                
+            }).done(function(data) {                                
                 renderBooking(data);
                 $('#add-booking').modal('hide');
             });
@@ -197,6 +197,7 @@
                 editedBooking.find('.booking-email').html(data.email);
                 editedBooking.find('.booking-tel').html(data.tel);
                 editedBooking.find('.booking-ticket').html(data.numberOfTickets);
+                editedBooking.find('.booking-paid-ticket').html(data.numberOfPaidTickets);
                 $('#add-booking').modal('hide');
             });
     }
@@ -225,6 +226,7 @@
             <td class="booking-email">${booking.email || 'N/A'}</td>
             <td class="booking-tel">${booking.tel || 'N/A'}</td>
             <td class="booking-ticket">${booking.numberOfTickets}</td>
+            <td class="booking-paid-ticket">${booking.numberOfPaidTickets}</td>
             <td>${booking.creatorInfo.name}</td>
             <td>
                 <a target="_blank" href="bookings/${booking._id}/pdf"><button class="btn btn-sm btn-primary">Xuất PDF</button></a>

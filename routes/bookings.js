@@ -19,7 +19,7 @@ bookingsRoutes.post('/', auth, async (req, res) => {
     } 
 
     try {
-        let body = _.pick(req.body, ['name', 'email', 'tel', 'numberOfTickets']);
+        let body = _.pick(req.body, ['name', 'email', 'tel', 'numberOfTickets', 'numberOfPaidTickets']);
         let bookingCodes = await Booking.getAllBookingCodes();
         let bookingCode;
         do {
@@ -98,7 +98,7 @@ bookingsRoutes.get('/:id/pdf', async (req, res) => {
         if (!booking) {
             return res.status(404).send();
         }
-        createPDFBooking(res, booking.name, booking.email || null, booking.tel || null, booking.numberOfTickets, booking.bookingCode);
+        createPDFBooking(res, booking.name, booking.email || null, booking.tel || null, booking.numberOfTickets, booking.numberOfPaidTickets, booking.bookingCode);
     } catch (error) {
         console.log(error)
         res.status(400).send(error);
@@ -117,7 +117,7 @@ bookingsRoutes.patch('/:id', auth, async (req, res) => {
     }
 
     try {
-        let body = _.pick(req.body, ['name', 'email', 'tel', 'numberOfTickets']);
+        let body = _.pick(req.body, ['name', 'email', 'tel', 'numberOfTickets', 'numberOfPaidTickets']);
 
         let updatedBooking = await Booking.findByIdAndUpdate(bookingId, {
             $set: body

@@ -5,7 +5,7 @@ const { auth } = require('./../middlewares/auth');
 
 const { Ticket } = require('./../db/models/ticket');
 const { Player } = require('./../db/models/player');
-const { User } = require('./../db/models/user');
+const { Counter } = require('./../db/models/counter');
 
 const { ROLES } = require('./../config/roles');
 
@@ -200,6 +200,14 @@ playersRoutes.patch('/:id/food/charge', auth, async (req, res) => {
         return res.status(403).send();
     }
 
+    let foodCounter = await Counter.findOne({
+        name: 'food'
+    });
+
+    if (foodCounter.counter === 0) {
+        return res.status(400).send(`Đã hết phần thực phẩm.`)
+    }
+
     let playerId = req.params.id;
     
     if (!ObjectID.isValid(playerId)) {
@@ -218,11 +226,20 @@ playersRoutes.patch('/:id/food/charge', auth, async (req, res) => {
             $inc: {
                 "food.used": 1
             }
-        }, { new: true });
+        }, { new: true }).lean();
 
         if (!updatedPlayer) {
             return res.status(404).send();
         }
+
+        // Update food counter
+        await Counter.findOneAndUpdate({
+            name: 'food'
+        }, {
+            $inc: {
+                "counter": -1
+            }
+        }, { new: true });
 
         res.send(updatedPlayer);
     } catch (error) {
@@ -236,6 +253,14 @@ playersRoutes.patch('/:id/food/deposit', auth, async (req, res) => {
     // Access level check (hardcoded)
     if ([ROLES.ADMIN, ROLES.TICKET_SELLER].indexOf(req.user.role) === -1) {
         return res.status(403).send();
+    }
+
+    let foodCounter = await Counter.findOne({
+        name: 'food'
+    });
+
+    if (foodCounter.counter === 0) {
+        return res.status(400).send(`Đã hết phần thực phẩm.`);
     }
 
     let playerId = req.params.id;

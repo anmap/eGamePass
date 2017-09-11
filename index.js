@@ -21,6 +21,7 @@ app.use('/users', require('./routes/users'));
 app.use('/bookings', require('./routes/bookings'));
 app.use('/tickets', require('./routes/tickets'));
 app.use('/players', require('./routes/players'));
+app.use('/counters', require('./routes/counters'));
 
 
 // Setup static page

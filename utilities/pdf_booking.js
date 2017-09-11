@@ -3,7 +3,7 @@ const fs = require('fs');
 const qr = require('qr-image');
 const { removeVNMarks } = require('./../utilities/utils');
 
-const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) => {
+const createPDFBooking = (res, name, email, tel, numberOfTickets, numberOfPaidTickets, bookingCode) => {
     const size = 'a4';
 
     console.log(`Export PDF for booking ${bookingCode}...`);
@@ -85,7 +85,7 @@ const createPDFBooking = (res, name, email, tel, numberOfTickets, bookingCode) =
     .font('document-bold')
     .text('Số lượng vé: ', { continued: true })
     .font('document')
-    .text(numberOfTickets);
+    .text(`${numberOfTickets} (Số vé đã thanh toán: ${numberOfPaidTickets}/${numberOfTickets})`);
 
     doc.moveDown();
 

@@ -1,4 +1,6 @@
 function getCode(code) {
+    if(!code) return;
+
     // Split code into separate elements
     codeElem = code.split('_');
 
@@ -14,14 +16,23 @@ function getCode(code) {
     }
 
     if (codeElem[2] === 'TICKET') {
-        return {
-            type: 'ticket',
-            code: codeElem[3]
+        if (codeElem[3].length === 5) {
+            return {
+                type: 'ticket',
+                code: codeElem[3]
+            }
+        } else {
+            return console.error('Invalid ticket serial number!');
         }
+        
     } else if (codeElem[2] === 'BOOKING') {
-        return {
-            type: 'booking',
-            code: codeElem[3]
+        if (codeElem[4].length === 8) {
+            return {
+                type: 'booking',
+                code: codeElem[3]
+            }
+        } else {
+            return console.error('Invalid booking code!');
         }
     } else {
         return console.error('Invalid code!');

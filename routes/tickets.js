@@ -1,11 +1,8 @@
 const express = require('express');
-const _ = require('lodash');
-const { ObjectID } = require('mongodb');
 const { auth } = require('./../middlewares/auth');
 
 const { Ticket } = require('./../db/models/ticket');
 const { Player } = require('./../db/models/player');
-const { User } = require('./../db/models/user');
 
 let ticketsRoutes = express.Router();
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Trưởng trạm - Vầng trăng tuổi thơ</title>
+    <title>Quầy bán vé - Vầng trăng tuổi thơ</title>
 
     <script src="scripts/roles.js"></script>
     
@@ -17,7 +17,7 @@
     // Check LocalStorage Data
     // Check LocalStorage Data
     if (!localStorage.authToken ||
-        ([ROLES.ADMIN, ROLES.GAME_STANDER]).indexOf(localStorage.role) === -1) {
+        ([ROLES.ADMIN, ROLES.TICKET_SELLER]).indexOf(localStorage.role) === -1) {
         window.location = 'index.html';
     }
     </script>
@@ -43,8 +43,7 @@
 <body>
     <div class="container">
         <h1 class="text-center">Vầng trăng tuổi thơ</h1>
-        <h4 class="text-center">TRƯỞNG TRẠM</h4>
-        <p class="text-center">Trạm: <strong id="game-code"></strong></p>
+        <h4 class="text-center">QUẦY BÁN VÉ</h4>
         <br>
         <div class="text-center">
             <button id="btn-logout" class="btn btn-danger">Đăng xuất</button>&nbsp;
@@ -58,8 +57,27 @@
         <video id="scanner" class="video-center video-responsive"></video>      
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="ticket-info" role="dialog">
+    <!-- Add Player Modal -->
+    <div class="modal fade" id="new-player" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Thêm người chơi mới</h4>
+            </div>
+            <div class="modal-body">
+                <label class="control-label" for="serial-number">Mã thẻ:</label>
+                <p class="serial-number"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success" id="btn-add-player">Thêm người chơi</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit deposit modal -->
+    <div class="modal fade" id="new-player" role="dialog">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
             <div class="modal-header">
@@ -67,7 +85,7 @@
             </div>
             <div class="modal-body"></div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-success" id="charge">VÀO TRẠM</button>
+                <button type="submit" class="btn btn-success" id="charge">Nạp</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
             </div>
             </div>
@@ -92,15 +110,25 @@
 
     var currentPlayerId;
 
-    $(document).ready(function() {
-        $('#game-code').html(localStorage.game);
+    var scanner;
 
-        let scanner = new Instascan.Scanner(qrOpts);
+    $(document).ready(function() {            
+        //getFoodCounter();
+
+        $('#btn-logout').on('click', function() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('username');
+            localStorage.removeItem('name');
+            localStorage.removeItem('role');
+            window.location = 'index.html';
+        });
+
+        scanner = new Instascan.Scanner(qrOpts);
 
         scanner.addListener('scan', function (code) {
             var ticket = getCode(code);
 
-            if (ticket && ticket.code.length === 5) {
+            if (ticket) {
                 getInfo(ticket.code);
             } else {
                 console.error('Invalid ticket serial number');
@@ -117,6 +145,8 @@
                     </p>
                 `)
             }
+
+            if (!scanner) return;
 
             if (cameras.length > 1) {
                 scanner.start(cameras[1]);
@@ -150,28 +180,40 @@
         $('#charge').on('click', function() {
             charge(currentPlayerId);
         });
-
-        $('#btn-logout').on('click', function() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('username');
-            localStorage.removeItem('name');
-            localStorage.removeItem('role');
-            if (localStorage.game) {
-                localStorage.removeItem('game');
-            }
-            if (localStorage.gameDesc) {
-                localStorage.removeItem('gameDesc')
-            }
-            window.location = 'index.html';
-        });
     });
 
-    function charge(playerId) {
+    function getFoodCounter() {
+        $.ajax({
+            type: 'GET',
+            url: 'counters/food',
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+                "x-vkoys-vttt-auth": localStorage.authToken
+            }
+        }).done(function(counter) {
+            var foodCounter = counter.counter;
+
+            if (foodCounter > 0) {
+                $('#food-counter').html(counter.counter);
+                return true;
+            }
+
+            $('#food-counter').html(`<span class="text-danger">ĐÃ HẾT PHẦN ĂN!</span>`);
+            $('#btn-manual, #scanner, #camera-switcher').remove();
+            if (scanner) {
+                scanner.stop();
+            }
+            scanner = null;
+        });
+    }
+
+    function depositGame(playerId) {
         if (!playerId) return console.log('No playerId supplied');
 
         $.ajax({
                 type: 'PATCH',
-                url: 'players/' + playerId + '/games/charge',
+                url: 'players/' + playerId + '/food/charge',
                 contentType: "application/json",
                 dataType: 'json',
                 headers: {
@@ -179,8 +221,31 @@
                 }
             }).done(function(data) {
                 currentPlayerId = null;
+                getFoodCounter();
                 $('#ticket-info').modal('hide');
             });
+    }
+
+    function depositCredit(playerId) {
+        if (!playerId) return console.log('No playerId supplied');
+
+        $.ajax({
+                type: 'PATCH',
+                url: 'players/' + playerId + '/food/deposit',
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": localStorage.authToken
+                }
+            }).done(function(data) {
+                currentPlayerId = null;
+                getFoodCounter();
+                $('#ticket-info').modal('hide');
+            });
+    }
+
+    function openAddPlayerModal(ticket) {
+        $('#new-player').modal('show');
     }
 
     function getInfo(ticket) {
@@ -193,83 +258,11 @@
                 "x-vkoys-vttt-auth": localStorage.authToken
             }
         }).done(function(ticket) {
-            var chargeable = true;
-            $('#ticket-info .modal-body').html('');
-
-            $('#ticket-info .modal-body').append(`
-                <label class="control-label" for="serial-number">Mã vé:</label>
-                <p id="player-name">${ticket.serialNumber}</p>
-            `);
-            
-            if (ticket.blocked) {
-                chargeable = false;
-                $('#ticket-info .modal-body').append(`
-                    <p class="text-danger"><strong>Vé này đã bị KHÓA!</strong></p>
-                `);
-            } else if (ticket._player && ticket.playerInfo) {
-                currentPlayerId = ticket._player;
-
-                $('#ticket-info .modal-body').append(`
-                    <label class="control-label" for="player-name">Người chơi:</label>
-                    <p id="player-name">${ticket.playerInfo.name}
-                        <em>${ ticket.playerInfo.games.initLock ? "(Chưa chơi qua tất cả các trò)" : "" }</em></p>
-                `);
-
-                var remainingCredits = ticket.playerInfo.games.credit - ticket.playerInfo.games.used;
-
-                $('#ticket-info .modal-body').append(`
-                <label class="control-label" for="remaining-credits">Số lượt còn lại:</label>
-                `);
-
-                if (remainingCredits > 1) {
-                    $('#ticket-info .modal-body').append(`
-                        <p class="text-success"><strong>${remainingCredits}</strong></p>
-                    `);
-                } else if (remainingCredits === 1) {
-                    $('#ticket-info .modal-body').append(`
-                        <p class="text-warning"><strong>${remainingCredits}</strong></p>
-                    `);
-                } else {
-                    $('#ticket-info .modal-body').append(`
-                        <p class="text-danger"><strong>Đã hết lượt chơi</strong></p>
-                    `);
-                    chargeable = false;
-                }
-
-                if (ticket.playerInfo.games.initLock) {
-                    if (ticket.playerInfo.games.initGames.indexOf(localStorage.game) > -1) {
-                        chargeable = false;
-
-                        $('#ticket-info .modal-body').append(`
-                            <p class="text-danger">
-                                <strong>
-                                    Không thể chơi lại trạm này trong 5 lượt đầu tiên.<br>
-                                    Xin chơi qua trạm khác!
-                                </strong>
-                            </p>
-                        `);
-                        $('#ticket-info .modal-body').append(`
-                            <p>
-                                <span class="text-warning">Các trạm đã chơi qua (theo thứ tự thời gian):</span><br>
-                                <em>${ ticket.playerInfo.games.initGames.join(', ') }</em>
-                            </p>
-                        `)
-                    }
-                }
-
+            if (!ticket._player) {
+                openAddPlayerModal(ticket);
             } else {
-                chargeable = false;
 
-                $('#ticket-info .modal-body').append(`
-                    <p class="text-danger"><strong>Vé này chưa được liên kết với người chơi!</strong></p>
-                `);
             }
-
-            if (!chargeable) {
-                $('#charge').hide();
-            }
-
-            $('#ticket-info').modal('show');
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.status === 404) {
                 alert('LỖI: Mã vé này không có trong hệ thống!')

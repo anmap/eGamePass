@@ -232,24 +232,22 @@ playersRoutes.patch('/:id/food/charge', auth, async (req, res) => {
 });
 
 // Deposit credit for food
-playersRoutes.patch('/:id/food/deposit/:credit', auth, async (req, res) => {
+playersRoutes.patch('/:id/food/deposit', auth, async (req, res) => {
     // Access level check (hardcoded)
     if ([ROLES.ADMIN, ROLES.TICKET_SELLER].indexOf(req.user.role) === -1) {
         return res.status(403).send();
     }
 
     let playerId = req.params.id;
-    let numberOfCredits = req.params.credit;
 
-    if (!ObjectID.isValid(playerId) || isNaN(numberOfCredits)) {
+    if (!ObjectID.isValid(playerId)) {
         return res.status(400).send();
     }
 
     try {
-
         let updatedPlayer = await Player.findByIdAndUpdate(playerId, {
             $inc: {
-                "food.credit": numberOfCredits
+                "food.credit": 1
             }
         }, { new: true });
         

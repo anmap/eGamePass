@@ -102,8 +102,6 @@
         Instascan.Camera.getCameras().then(function (cameras) {
             cameraList = cameras;
 
-            console.log(cameras);
-
             for (var i=0; i < cameras.length; i++) {
                 $('#camera-switcher').append(`
                     <p class="text-center">
@@ -123,7 +121,6 @@
         });
 
         $(document).on('click', '.switcher', function(e) {
-            console.log('Click!')
             e.preventDefault();
             var index = $(this).data('index');
             scanner.start(cameraList[index]);
@@ -190,7 +187,7 @@
 
                 if (remainingCredits > 1) {
                     $('#ticket-info .modal-body').append(`
-                        <p class="text-warning"><strong>${remainingCredits}</strong></p>
+                        <p class="text-success"><strong>${remainingCredits}</strong></p>
                     `);
                 } else if (remainingCredits === 1) {
                     $('#ticket-info .modal-body').append(`
@@ -216,7 +213,10 @@
                             </p>
                         `);
                         $('#ticket-info .modal-body').append(`
-                            <p class="text-warning">Các trạm đã chơi qua: ${ ticket.playerInfo.games.initGames.join(', ') }</p>
+                            <p>
+                                <span class="text-warning">Các trạm đã chơi qua (theo thứ tự thời gian):</span><br>
+                                <em>${ ticket.playerInfo.games.initGames.join(', ') }</em>
+                            </p>
                         `)
                     }
                 }

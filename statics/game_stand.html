@@ -33,13 +33,23 @@
             margin-right: auto;
             display: block
         }
+
+        .video-responsive {
+            width: 100%;
+            height: auto;
+        }
    </style>
 </head>
 <body>
     <div class="container">
         <h1 class="text-center">VẦNG TRĂNG TUỔI THƠ</h1>
         <h4 class="text-center">TRƯỞNG TRẠM</h4>
-        <video id="scanner" class="video-center"></video>      
+        <p class="text-center">Trạm: <strong id="game-code"></strong></p>
+        <br>
+        <p class="text-center"><strong>Chọn camera:</strong></p>
+        <div id="camera-switcher"></div>
+        <br>
+        <video id="scanner" class="video-center video-responsive"></video>      
     </div>
 
     <!-- Modal -->
@@ -72,9 +82,13 @@
         refractoryPeriod: 5000
     }
 
+    var cameraList;
+
     var currentPlayerId;
 
     $(document).ready(function() {
+        $('#game-code').html(localStorage.game);
+
         let scanner = new Instascan.Scanner(qrOpts);
 
         scanner.addListener('scan', function (code) {
@@ -86,19 +100,36 @@
         });
 
         Instascan.Camera.getCameras().then(function (cameras) {
+            cameraList = cameras;
+
+            console.log(cameras);
+
+            for (var i=0; i < cameras.length; i++) {
+                $('#camera-switcher').append(`
+                    <p class="text-center">
+                        <a href="#" class="switcher" data-index="${i}">${ cameras[i].name }</a>
+                    </p>
+                `)
+            }
+
             if (cameras.length > 1) {
                 scanner.start(cameras[1]);
             } else if (cameras.length > 0) {
                 scanner.start(cameras[0]);
-            } else {
-                $(document).html('<h1 class="text-center text-danger">Không tìm thấy camera nào!</h1>')
             }
         }).catch(function (e) {
+            $(document).html('<h1 class="text-center text-danger">Không tìm thấy camera nào!</h1>')
             console.error(e);
         });
 
+        $(document).on('click', '.switcher', function(e) {
+            console.log('Click!')
+            e.preventDefault();
+            var index = $(this).data('index');
+            scanner.start(cameraList[index]);
+        });
+
         $('#ticket-info').on('hidden.bs.modal', function () {
-            $('#ticket-info .modal-body').html('');
             $('#charge').show();
         });
 
@@ -135,6 +166,7 @@
             }
         }).done(function(ticket) {
             var chargeable = true;
+            $('#ticket-info .modal-body').html('');
 
             $('#ticket-info .modal-body').append(`
                 <label class="control-label" for="serial-number">Mã vé:</label>
@@ -158,24 +190,42 @@
 
                 if (remainingCredits > 1) {
                     $('#ticket-info .modal-body').append(`
-                        
-                        <strong><h4 class="text-success">${remainingCredits}</h4></strong>
+                        <p class="text-warning"><strong>${remainingCredits}</strong></p>
                     `);
                 } else if (remainingCredits === 1) {
                     $('#ticket-info .modal-body').append(`
-                        <strong><h4 class="text-warning">${remainingCredits}</h4></strong>
+                        <p class="text-warning"><strong>${remainingCredits}</strong></p>
                     `);
                 } else {
                     $('#ticket-info .modal-body').append(`
-                        <strong><h4 class="text-danger">ĐÃ HẾT LƯỢT CHƠI</h4></strong>
+                        <p class="text-danger"><strong>Đã hết lượt chơi</strong></p>
                     `);
                     chargeable = false;
                 }
+
+                if (ticket.playerInfo.games.initLock) {
+                    if (ticket.playerInfo.games.initGames.indexOf(localStorage.game) > -1) {
+                        chargeable = false;
+
+                        $('#ticket-info .modal-body').append(`
+                            <p class="text-danger">
+                                <strong>
+                                    Không thể chơi lại trạm này trong 5 lượt đầu tiên.<br>
+                                    Xin chơi qua trạm khác!
+                                </strong>
+                            </p>
+                        `);
+                        $('#ticket-info .modal-body').append(`
+                            <p class="text-warning">Các trạm đã chơi qua: ${ ticket.playerInfo.games.initGames.join(', ') }</p>
+                        `)
+                    }
+                }
+
             } else {
                 chargeable = false;
 
                 $('#ticket-info .modal-body').append(`
-                    <strong><h4 class="text-danger">THẺ CHƯA ĐƯỢC LIÊN KẾT VỚI NGƯỜI CHƠI NÀO</h4></strong>
+                    <p class="text-danger"><strong>Vé này chưa được liên kết với người chơi!</strong></p>
                 `);
             }
 
@@ -184,6 +234,10 @@
             }
 
             $('#ticket-info').modal('show');
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status === 404) {
+                alert('LỖI: Mã vé này không có trong hệ thống!')
+            }
         });
     }
     </script>

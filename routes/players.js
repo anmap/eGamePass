@@ -129,6 +129,21 @@ playersRoutes.patch('/:id/games/charge', auth, async (req, res) => {
             return res.status(400).send(`${player.name} (ID: ${player._id}) đã hết lượt chơi.`);
         }
 
+        if (player.games.initLock) {
+            if (player.games.initGames.indexOf(req.user.game) > -1) {
+                return res.status(400).send(`${player.name} (ID: ${player._id}) đã chơi trò này trong 5 lượt đầu.`)
+            }
+
+            player.games.initGames.push(req.user.game);
+
+            // Remove init lock for player when 5 separate games are played
+            if (player.games.initGames.length === 5) {
+                player.games.initLock = false;
+            }
+
+            await player.save();
+        }
+
         let updatedPlayer = await Player.findByIdAndUpdate(playerId, {
             $inc: {
                 "games.used": 1

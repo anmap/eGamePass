@@ -29,9 +29,7 @@ const PlayerSchema = new mongoose.Schema({
         },
         initGames: [
             {
-                _gameId: {
-                    type: mongoose.Schema.Types.ObjectId
-                }
+                type: String
             }
         ]
     },

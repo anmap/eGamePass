@@ -3,6 +3,7 @@ require('./config');
 
 // Import libraries and frameworks
 const path = require('path');
+const https = require('https');
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -26,14 +27,21 @@ app.use('/counters', require('./routes/counters'));
 
 // Setup static page
 app.use('/', express.static(path.join(__dirname, 'statics')));
-// app.use('/', (req, res) => {
-//     res.render('index.html');
-// });
 
-// Run app on specified PORT (from config.js)
-app.listen(process.env.PORT, () => {
-    console.log(`App is running on port ${process.env.PORT}...`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(process.env.PORT, () => {
+        console.log(`App is running on port ${process.env.PORT}...`);
+    });
+} else {
+    const httpsOptions = {
+        key: fs.readFileSync('./../key.pem'),
+        cert: fs.readFileSync('./../cert.pem')
+    }
+
+    const server = https.createServer(httpsOptions, app).listen(process.env.PORT, () => {
+        console.log(`App is running securely on port ${process.env.PORT}...`);
+    });
+}
 
 // Export app for testing
 module.exports = { app };

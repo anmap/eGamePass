@@ -84,6 +84,7 @@
     var qrOpts = {
         continuous: true,
         video: document.getElementById('scanner'),
+        mirror: false,
         backgroundScan: false,
         refractoryPeriod: 5000
     }
@@ -116,7 +117,7 @@
             } else if (cameras.length > 0) {
                 scanner.start(cameras[0]);
             }
-            
+
             cameraList = cameras;
 
             for (var i=0; i < cameras.length; i++) {

@@ -12,7 +12,7 @@ ticketsRoutes.get('/', auth, async (req, res) => {
 
         let string = tickets.reduce((memo, ticket) => memo + JSON.stringify(ticket), "");
 
-        res.send(string);
+        res.send(tickets);
     } catch (error) {
         console.log(error);
         res.status(400).send(error);

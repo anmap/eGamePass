@@ -43,7 +43,7 @@ if (process.env.NODE_ENV !== 'production') {
     });
 
     // Redirect to HTTPS
-    let http = http.createServer();
+    let http = express.createServer();
     http.get('*',function(req,res){  
         res.redirect(`https://${req.hostname}${req.url}`);
     });

@@ -67,6 +67,14 @@
             <div class="modal-body">
                 <label class="control-label" for="serial-number">Mã thẻ:</label>
                 <p class="serial-number"></p>
+                <br>
+                <div class="input-group">
+                    <input id="input-name" type="text" class="form-control" name="name" placeholder="Họ tên" required>
+                </div>
+                <br>
+                <div class="input-group">
+                    <input id="input-age" type="number" min="1" step="1" class="form-control" name="number-of-tickets" placeholder="Tuổi" required>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="submit" class="btn btn-success" id="btn-add-player">Thêm người chơi</button>
@@ -77,15 +85,47 @@
     </div>
 
     <!-- Credit deposit modal -->
-    <div class="modal fade" id="new-player" role="dialog">
+    <div class="modal fade" id="deposit" role="dialog">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Thông tin vé</h4>
+                <h4 class="modal-title">Nạp lượt</h4>
             </div>
-            <div class="modal-body"></div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#game-container">Nạp lượt chơi</a></li>
+                    <li><a data-toggle="tab" href="#food-container">Nạp phần ăn</a></li>
+                </ul>
+                <br>
+                <strong>Mã vé:</strong> <span class="serial-number"></span><br>
+                <strong>Họ tên:</strong> <span id="output-name"></span><br>
+                <strong>Tuổi:</strong> <span id="output-age"></span><br>
+                <br>
+                <div class="tab-content">
+                    <div id="game-container" class="tab-pane fade in active">
+                        <strong>Số lượt chơi còn lại:</strong> <span id="output-remaining-game"></span><br><br>
+                        <button class="btn btn-md btn-primary" onclick="depositGame(5)">Nạp 5 lượt chơi</button><br><br>
+                        <button class="btn btn-md btn-primary" onclick="depositGame(10)">Nạp 10 lượt chơi</button><br><br>
+                        <form class="input-group">
+                            <input id="input-game-deposit" type="number" min="1" step="1" class="form-control" placeholder="Số lượt chơi" required>
+                            <span class="input-group-btn">
+                                <button id="btn-game-deposit" type="submit" class="btn btn-primary">Nạp lượt chơi</button>
+                            </span>                        
+                        </form>
+                    </div>
+                    <div id="food-container" class=" tab-pane fade">
+                        <p class="text-warning">
+                            <strong>Lưu ý:</strong><br>
+                            - Người chơi mỗi lần chỉ được mua 1 lượt thức ăn, chỉ khi hết lượt thức ăn mới được mua tiếp.<br>
+                            - Khi lượng thức ăn đã bán hết thì sẽ không thể nạp thêm lượt thức ăn nữa.
+                        </p>
+                        <strong>Lượt thực phẩm người chơi có:</strong> <span id="output-remaining-food"></span><br>
+                        <strong>Lượng thức ăn còn lại có thể bán:</strong> <span id="output-remaining-sellable"></span><br><br>
+                        <button id="btn-food-deposit" onclick="depositFood()" class="btn btn-md btn-primary">Nạp 1 phần ăn</button>
+                    </div>
+                </div>
+            </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-success" id="charge">Nạp</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
             </div>
             </div>
@@ -112,9 +152,7 @@
 
     var scanner;
 
-    $(document).ready(function() {            
-        //getFoodCounter();
-
+    $(document).ready(function() {
         $('#btn-logout').on('click', function() {
             localStorage.removeItem('authToken');
             localStorage.removeItem('username');
@@ -173,79 +211,118 @@
             scanner.start(cameraList[index]);
         });
 
-        $('#ticket-info').on('hidden.bs.modal', function () {
-            $('#charge').show();
+        $('#new-player').on('hidden.bs.modal', function () {
+            $('#input-name, #input-age').val('');
         });
 
-        $('#charge').on('click', function() {
-            charge(currentPlayerId);
+        $('#deposit').on('hidden.bs.modal', function () {
+            $('#input-game-deposit').val('');
+            $('#btn-food-deposit').show();
+        });
+
+        $('#btn-game-deposit').on('click', function(e) {
+            e.preventDefault();
+            var credits = $('#input-game-deposit').val();
+            depositGame(credits);
         });
     });
 
-    function getFoodCounter() {
+    function depositGame(credits) {
+        if (!currentPlayerId) return console.error('No playerId supplied');
+        if (!credits || isNaN(credits) || credits < 1) return console.error('No credits supplied');        
+
+        var confirmGameDeposit = confirm(`Chắc chắn nạp ${credits} lượt?`);
+
+        if (confirmGameDeposit) {
+            $.ajax({
+                type: 'PATCH',
+                url: 'players/' + currentPlayerId + '/games/deposit/' + credits,
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": localStorage.authToken
+                }
+            }).done(function(data) {
+                currentPlayerId = null;
+                $('#deposit').modal('hide');
+            });
+        }        
+    }
+
+    function depositFood() {
+        if (!currentPlayerId) return console.error('No playerId supplied');
+
+        var confirmFoodDeposit = confirm(`Chắc chắn thêm 1 phần ăn cho người chơi?`);
+
+        if (confirmFoodDeposit) {
+            $.ajax({
+                type: 'PATCH',
+                url: 'players/' + currentPlayerId + '/food/deposit',
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": localStorage.authToken
+                }
+            }).done(function(data) {
+                currentPlayerId = null;
+                $('#deposit').modal('hide');
+            });
+        }
+    }
+
+    function addPlayer(ticketId, playerData) {
         $.ajax({
+            type: 'POST',
+            url: 'players/' + ticketId,
+            data: JSON.stringify(playerData),
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+                "x-vkoys-vttt-auth": localStorage.authToken
+            }
+        }).done(function(data) {
+            $('#ticket-info').modal('hide');
+        });
+    }
+
+    function openAddPlayerModal(ticket) {
+        $('.serial-number').html(ticket.serialNumber);
+        $('#new-player').modal('show');
+
+        $('#btn-add-player').off().on('click', function() {
+            addPlayer(ticket._id, {
+                name: $('#input-name').val(),
+                age: $('#input-age').val()
+            });
+            $('#new-player').modal('hide');
+        });
+    }
+
+    function openDepositModal(ticket) {
+        $('.serial-number').html(ticket.serialNumber);
+        $('#output-name').html(ticket.playerInfo.name);
+        $('#output-age').html(ticket.playerInfo.age);
+        $('#output-remaining-game').html(ticket.playerInfo.games.credit - ticket.playerInfo.games.used);
+        $('#output-remaining-food').html(ticket.playerInfo.food.credit - ticket.playerInfo.food.used);
+        $('#deposit').modal('show');
+    }
+
+    function getRemainingFoodCredits(playerFoodInfo) {
+        return $.ajax({
             type: 'GET',
-            url: 'counters/food',
+            url: 'counters/remaining-food-credits',
             contentType: "application/json",
             dataType: 'json',
             headers: {
                 "x-vkoys-vttt-auth": localStorage.authToken
             }
         }).done(function(counter) {
-            var foodCounter = counter.counter;
-
-            if (foodCounter > 0) {
-                $('#food-counter').html(counter.counter);
-                return true;
+            $('#output-remaining-sellable').html(counter.counter);
+            var remainingFoodCredits = playerFoodInfo.credit - playerFoodInfo.used;
+            if (counter.counter < 1 || remainingFoodCredits > 0) {
+                $('#btn-food-deposit').hide();
             }
-
-            $('#food-counter').html(`<span class="text-danger">ĐÃ HẾT PHẦN ĂN!</span>`);
-            $('#btn-manual, #scanner, #camera-switcher').remove();
-            if (scanner) {
-                scanner.stop();
-            }
-            scanner = null;
         });
-    }
-
-    function depositGame(playerId) {
-        if (!playerId) return console.log('No playerId supplied');
-
-        $.ajax({
-                type: 'PATCH',
-                url: 'players/' + playerId + '/food/charge',
-                contentType: "application/json",
-                dataType: 'json',
-                headers: {
-                    "x-vkoys-vttt-auth": localStorage.authToken
-                }
-            }).done(function(data) {
-                currentPlayerId = null;
-                getFoodCounter();
-                $('#ticket-info').modal('hide');
-            });
-    }
-
-    function depositCredit(playerId) {
-        if (!playerId) return console.log('No playerId supplied');
-
-        $.ajax({
-                type: 'PATCH',
-                url: 'players/' + playerId + '/food/deposit',
-                contentType: "application/json",
-                dataType: 'json',
-                headers: {
-                    "x-vkoys-vttt-auth": localStorage.authToken
-                }
-            }).done(function(data) {
-                currentPlayerId = null;
-                getFoodCounter();
-                $('#ticket-info').modal('hide');
-            });
-    }
-
-    function openAddPlayerModal(ticket) {
-        $('#new-player').modal('show');
     }
 
     function getInfo(ticket) {
@@ -261,7 +338,10 @@
             if (!ticket._player) {
                 openAddPlayerModal(ticket);
             } else {
-
+                currentPlayerId = ticket._player;
+                getRemainingFoodCredits(ticket.playerInfo.food).then(function() {
+                    openDepositModal(ticket);
+                });
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.status === 404) {

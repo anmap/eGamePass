@@ -201,7 +201,7 @@ playersRoutes.patch('/:id/food/charge', auth, async (req, res) => {
     }
 
     let foodCounter = await Counter.findOne({
-        name: 'food'
+        name: 'food-remaining'
     });
 
     if (foodCounter.counter === 0) {
@@ -234,7 +234,7 @@ playersRoutes.patch('/:id/food/charge', auth, async (req, res) => {
 
         // Update food counter
         await Counter.findOneAndUpdate({
-            name: 'food'
+            name: 'food-remaining'
         }, {
             $inc: {
                 "counter": -1
@@ -256,7 +256,7 @@ playersRoutes.patch('/:id/food/deposit', auth, async (req, res) => {
     }
 
     let foodCounter = await Counter.findOne({
-        name: 'food'
+        name: 'food-remaining'
     });
 
     if (foodCounter.counter === 0) {

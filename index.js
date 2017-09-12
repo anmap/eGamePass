@@ -45,8 +45,7 @@ if (process.env.NODE_ENV !== 'production') {
 
     // Redirect to HTTPS
     http.createServer((req, res) => {
-        res.writeHead(301, { "Location": "https://" + req.hostname + req.url });
-        res.end();
+        res.redirect("https://" + req.hostname + req.url);
     }).listen(80);
 }
 

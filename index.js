@@ -7,7 +7,6 @@ const fs = require('fs');
 const https = require('https');
 const _ = require('lodash');
 const express = require('express');
-const secure = require('express-force-https');
 const bodyParser = require('body-parser');
 const { ObjectID } = require('mongodb');
 
@@ -16,10 +15,6 @@ const { mongoose } = require('./db/mongoose'); // (This will connect to DB)
 
 // Setup express and middlewares
 let app = express();
-
-if (process.env.NODE_ENV === 'production') {
-    app.use(secure);
-}
 
 app.use(bodyParser.json()); // Configure app to use JSON
 // Routes
@@ -43,9 +38,16 @@ if (process.env.NODE_ENV !== 'production') {
         cert: fs.readFileSync('./../cert.pem')
     }
 
-    const server = https.createServer(httpsOptions, app).listen(process.env.PORT, () => {
+    https.createServer(httpsOptions, app).listen(process.env.PORT, () => {
         console.log(`App is running securely on port ${process.env.PORT}...`);
     });
+
+    // Redirect to HTTPS
+    let http = http.createServer();
+    http.get('*',function(req,res){  
+        res.redirect(`https://${req.hostname}${req.url}`);
+    });
+    http.listen(80);
 }
 
 // Export app for testing

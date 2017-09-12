@@ -3,6 +3,7 @@ require('./config');
 
 // Import libraries and frameworks
 const path = require('path');
+const fs = require('fs');
 const https = require('https');
 const _ = require('lodash');
 const express = require('express');

@@ -5,6 +5,7 @@ require('./config');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
+const http = require('http');
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -43,8 +44,8 @@ if (process.env.NODE_ENV !== 'production') {
     });
 
     // Redirect to HTTPS
-    let http = express.createServer();
-    http.get('*',function(req,res){  
+    let http = http.createServer();
+    http.get('*', (req,res) => {  
         res.redirect(`https://${req.hostname}${req.url}`);
     });
     http.listen(80);

@@ -44,11 +44,10 @@ if (process.env.NODE_ENV !== 'production') {
     });
 
     // Redirect to HTTPS
-    let http = http.createServer();
-    http.get('*', (req,res) => {  
-        res.redirect(`https://${req.hostname}${req.url}`);
-    });
-    http.listen(80);
+    http.createServer((req, res) => {
+        res.writeHead(301, { "Location": "https://" + req.hostname + req.url });
+        res.end();
+    }).listen(80);
 }
 
 // Export app for testing

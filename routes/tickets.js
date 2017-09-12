@@ -8,8 +8,11 @@ let ticketsRoutes = express.Router();
 
 ticketsRoutes.get('/', auth, async (req, res) => {
     try {
-        let tickets = await Ticket.find({});
-        res.send(tickets);
+        let tickets = await Ticket.find({}, '-_id -__v');
+
+        let string = tickets.reduce((memo, ticket) => memo + JSON.stringify(ticket), "");
+
+        res.send(string);
     } catch (error) {
         console.log(error);
         res.status(400).send(error);

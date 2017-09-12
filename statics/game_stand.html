@@ -101,6 +101,9 @@
             var ticket = getCode(code);
 
             if (ticket && ticket.code.length === 5) {
+                if (navigator.vibrate) {
+                    navigator.vibrate(500);
+                }
                 getInfo(ticket.code);
             } else {
                 console.error('Invalid ticket serial number');
@@ -108,6 +111,12 @@
         });
 
         Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 1) {
+                scanner.start(cameras[1]);
+            } else if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            }
+            
             cameraList = cameras;
 
             for (var i=0; i < cameras.length; i++) {
@@ -116,12 +125,6 @@
                         <a href="#" class="switcher" data-index="${i}">${ cameras[i].name }</a>
                     </p>
                 `)
-            }
-
-            if (cameras.length > 1) {
-                scanner.start(cameras[1]);
-            } else if (cameras.length > 0) {
-                scanner.start(cameras[0]);
             }
         }).catch(function (e) {
             $('#camera-switcher').html('<p><strong class="text-danger">Không tìm thấy camera nào</strong></p>');

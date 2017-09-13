@@ -252,12 +252,12 @@
 
                 playerTwo = ticket.playerInfo;
 
-                $('#player2-ticket').html(`${ticket.serialNumber} (${playerOne.name})`)
+                $('#player2-ticket').html(`${ticket.serialNumber} (${playerTwo.name})`)
                 
                 $('#receiver').html(`
                     <strong>Mã vé:</strong> ${ticket.serialNumber}<br>
-                    <strong>Tên người chơi:</strong> ${playerOne.name}<br>
-                    <strong>Tuổi:</strong> ${playerOne.age}<br>
+                    <strong>Tên người chơi:</strong> ${playerTwo.name}<br>
+                    <strong>Tuổi:</strong> ${playerTwo.age}<br>
                     <strong>Số lượt chơi còn lại:</strong> ${remainingCredits}<br>
                 `);
 

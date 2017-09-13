@@ -322,6 +322,10 @@ playersRoutes.patch('/transfer-credits/:id1/:id2/:credit', auth, async (req, res
     let playerTwoId = req.params.id2;
     let numberOfCredits = req.params.credit;
 
+    if (playerOneId === playerTwoId) {
+        return res.status(400).send();
+    }
+
     if (!ObjectID.isValid(playerOneId) || !ObjectID.isValid(playerTwoId) || isNaN(numberOfCredits) || numberOfCredits < 1 ||  numberOfCredits % 1 !== 0) {
         return res.status(400).send();
     }

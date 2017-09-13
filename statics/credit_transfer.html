@@ -192,11 +192,11 @@
         if (!playerOne || !playerTwo) return console.error('Must supply 2 players');
         if (!credits || isNaN(credits) || credits < 1 || credits % 1 !== 0) return console.error('No credits supplied');
 
-        if (playerOne.games.credits - playerOne.games.used < credits) {
-            return alert(`Chuyển được tối đa ${playerOne.games.credits - playerOne.games.used} lượt thôi.`)
+        if (credits > (playerOne.games.credit - playerOne.games.used)) {
+            return alert(`Chuyển được tối đa ${playerOne.games.credit - playerOne.games.used} lượt thôi.`)
         }
 
-        var confirmTransfer = confirm(`Xác nhận chuyển từ người chơi "${playerOne.name}" sang người chơi "${playerTwo.name}" ${credits} lượt?`);
+        var confirmTransfer = confirm(`Xác nhận chuyển ${credits} lượt chơi từ người chơi "${playerOne.name}" sang người chơi "${playerTwo.name}"?`);
 
         if (!confirmTransfer) return;
 

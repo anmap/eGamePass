@@ -31,8 +31,7 @@ const UserSchema = new mongoose.Schema({
         default: 'unassigned'
     },
     game: {
-        type: String,
-        unique: true
+        type: String
     },
     tokens: [{
         access: {

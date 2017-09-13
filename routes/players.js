@@ -3,8 +3,9 @@ const _ = require('lodash');
 const { ObjectID } = require('mongodb');
 const { auth } = require('./../middlewares/auth');
 
-const { Ticket } = require('./../db/models/ticket');
 const { Player } = require('./../db/models/player');
+const { Ticket } = require('./../db/models/ticket');
+const { Booking } = require('./../db/models/booking');
 const { Counter } = require('./../db/models/counter');
 
 const { ROLES } = require('./../config/roles');
@@ -12,12 +13,19 @@ const { ROLES } = require('./../config/roles');
 let playersRoutes = express.Router();
 
 // Insert new player
-playersRoutes.post('/:ticketId', auth, async (req, res) => {
+playersRoutes.post('/:ticketId/:bookingId?', auth, async (req, res) => {
+    // Define roles
+    let acceptedRoles;
+    if (req.params.bookingId) {
+        acceptedRoles = [ROLES.ADMIN, ROLES.BOOKER];
+    } else {
+        acceptedRoles = [ROLES.ADMIN, ROLES.TICKET_SELLER];
+    }
     // Access level check (hardcoded)
-    if ([ROLES.ADMIN, ROLES.TICKET_SELLER].indexOf(req.user.role) === -1) {
+    if (acceptedRoles.indexOf(req.user.role) === -1) {
         return res.status(403).send();
-    }  
-
+    }
+    
     try {
         let ticketId = req.params.ticketId;
 
@@ -39,6 +47,22 @@ playersRoutes.post('/:ticketId', auth, async (req, res) => {
         // Return 401 if ticket is already linked
         if (ticket._player) {
             return res.status(401).send();
+        }
+
+        // if player's gonna be linked with a booking, check if booking if exists
+        if (req.params.bookingId) {            
+            let bookingId = req.params.bookingId;
+            console.log('Activate booking', bookingId);
+
+            if (!ObjectID.isValid(bookingId)) {
+                return res.status(400).send();
+            }
+
+            let booking = await Booking.findById(bookingId);
+            if (!booking) {
+                return res.status(404).send();
+            }
+            body._booking = booking._id;
         }
 
         // Create player
@@ -171,7 +195,7 @@ playersRoutes.patch('/:id/games/deposit/:credit', auth, async (req, res) => {
     let playerId = req.params.id;
     let numberOfCredits = req.params.credit;
 
-    if (!ObjectID.isValid(playerId) || isNaN(numberOfCredits)) {
+    if (!ObjectID.isValid(playerId) || isNaN(numberOfCredits) || numberOfCredits < 1 || numberOfCredits % 1 !== 0) {
         return res.status(400).send();
     }
 
@@ -281,6 +305,57 @@ playersRoutes.patch('/:id/food/deposit', auth, async (req, res) => {
         }
 
         res.send(updatedPlayer);
+    } catch (error) {
+        console.log(error);
+        res.status(400).send(error);
+    }
+});
+
+// Deposit credit for games
+playersRoutes.patch('/transfer-credits/:id1/:id2/:credit', auth, async (req, res) => {
+    // Access level check (hardcoded)
+    if ([ROLES.ADMIN, ROLES.CREDIT_TRANSFERER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }    
+
+    let playerOneId = req.params.id1;
+    let playerTwoId = req.params.id2;
+    let numberOfCredits = req.params.credit;
+
+    if (!ObjectID.isValid(playerOneId) || !ObjectID.isValid(playerTwoId) || isNaN(numberOfCredits) || numberOfCredits < 1 ||  numberOfCredits % 1 !== 0) {
+        return res.status(400).send();
+    }
+
+    try {
+        let playerOne = await Player.findById(playerOneId);
+        let playerTwo = await Player.findById(playerTwoId);
+        
+        if (!playerOne || !playerTwo) {
+            return res.status(404).send();
+        }
+
+        // Check if the transferred credit is larger than Player 1's remaining credit
+        if ((playerOne.games.credit - playerOne.games.used) < numberOfCredits) {
+            return res.status(400).send();
+        }
+
+        // Remove credits from first plyaer
+        let playerOneUpdated = await Player.findByIdAndUpdate(playerOneId, {
+            $inc: {
+                "games.credit": -numberOfCredits
+            }
+        }, { new: true });
+        // Add credits to second player
+        let playerTwoUpdated = await Player.findByIdAndUpdate(playerTwoId, {
+            $inc: {
+                "games.credit": numberOfCredits
+            }
+        }, { new: true });
+
+        res.send({
+            transferring_player: playerOneUpdated,
+            received_player: playerTwoUpdated 
+        });
     } catch (error) {
         console.log(error);
         res.status(400).send(error);

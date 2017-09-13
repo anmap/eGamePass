@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chuyển lượt chơi - Vầng trăng tuổi thơ</title>
+
+    <script src="scripts/roles.js"></script>
+    
+    <script>    
+    // Check LocalStorage
+    if (typeof(Storage) === "undefined") {
+        $(document).html('<h1 class="text-center text-danger">No LocalStorage support!</h1>')
+    }
+
+    // Check LocalStorage Data
+    // Check LocalStorage Data
+    if (!localStorage.authToken ||
+        ([ROLES.ADMIN, ROLES.CREDIT_TRANSFERER]).indexOf(localStorage.role) === -1) {
+        window.location = 'index.html';
+    }
+    </script>
+
+   <!-- Latest compiled and minified CSS -->
+   <link rel="stylesheet" href="styles/bootstrap.min.css">
+   <!-- Optional theme -->
+   <link rel="stylesheet" href="styles/bootstrap-theme.min.css">
+
+   <style>
+       .video-center {
+            margin-left: auto;
+            margin-right: auto;
+            display: block
+        }
+
+        .video-responsive {
+            width: 100%;
+            height: auto;
+        }
+   </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Vầng trăng tuổi thơ</h1>
+        <h4 class="text-center">CHUYỂN LƯỢT CHƠI</h4>
+        <br>
+        <div class="text-center">
+            <button id="btn-logout" class="btn btn-danger">Đăng xuất</button>&nbsp;
+            <button id="btn-manual" class="btn btn-primary">Nhập mã vé</button><br><br>
+            <button class="btn btn-warning" onclick="reset()">Làm lại</button>
+        </div>
+        <br>
+        <div id="camera-switcher">
+            <p class="text-center"><strong>Chọn camera:</strong></p>
+        </div>
+        <br>
+        <div class=text-center>
+            <p><strong>Vé chuyển:</strong> <span id="player1-ticket"><em>Đang đợi...</em></span></p>
+            <p><strong>Vé nhận:</strong> <span id="player2-ticket"><em>Đang đợi...</em></span></p>
+        </div>
+        <video id="scanner" class="video-center video-responsive"></video>      
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="credit-transfer" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Chuyển lượt chơi</h4>
+            </div>
+            <div class="modal-body">
+                <strong>NGƯỜI CHUYỂN</strong>
+                <div id="transferer"></div>
+                <hr>
+                <strong>NGUỜI NHẬN</strong>
+                <div id="receiver"></div>
+                <hr>
+                <strong>SỐ LƯỢT CHƠI</strong>
+                <div class="input-group">
+                    <input id="credits" type="number" min="1" step="1" class="form-control" placeholder="Số lượt chơi sẽ chuyển">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="transfer">Chuyển</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import JS libraries and scripts -->
+    <script src="scripts/jquery-1.12.4.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+    <script src="scripts/instascan.min.js"></script>
+    <script src="scripts/code-validate.js"></script>
+    <!-- Own scripts -->
+    <script>
+    var qrOpts = {
+        continuous: true,
+        video: document.getElementById('scanner'),
+        mirror: false,
+        backgroundScan: false,
+        refractoryPeriod: 5000
+    }
+
+    var cameraList;
+
+    var playerOne, playerTwo;
+
+    $(document).ready(function() {
+        $('#game-code').html(localStorage.game);
+
+        let scanner = new Instascan.Scanner(qrOpts);
+
+        scanner.addListener('scan', function (code) {
+            var ticket = getCode(code);
+
+            if (ticket && ticket.code.length === 5) {
+                if (navigator.vibrate) {
+                    navigator.vibrate(500);
+                }
+                getInfo(ticket.code);
+            } else {
+                console.error('Invalid ticket serial number');
+            }
+        });
+
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 1) {
+                scanner.start(cameras[1]);
+            } else if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            }
+
+            cameraList = cameras;
+
+            for (var i=0; i < cameras.length; i++) {
+                $('#camera-switcher').append(`
+                    <p class="text-center">
+                        <a href="#" class="switcher" data-index="${i}">${ cameras[i].name }</a>
+                    </p>
+                `)
+            }
+        }).catch(function (e) {
+            $('#camera-switcher').html('<p><strong class="text-danger">Không tìm thấy camera nào</strong></p>');
+            console.error(e);
+        });
+
+        $('#btn-manual').on('click', function() {
+            var code = prompt('Xin nhập mã vé');
+            if (!code) return;
+            code = code.replace(/ +/g, "");
+            if (code.length === 5) {
+                getInfo(code.toUpperCase());
+            }
+        });
+
+        $(document).on('click', '.switcher', function(e) {
+            e.preventDefault();
+            var index = $(this).data('index');
+            scanner.start(cameraList[index]);
+        });
+
+        $('#credit-transfer ').on('hidden.bs.modal', function () {
+            reset();
+        });
+
+        $('#transfer').on('click', function() {
+            var credits = $('#credits').val();
+            transfer(credits);
+        });
+
+        $('#btn-logout').on('click', function() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('username');
+            localStorage.removeItem('name');
+            localStorage.removeItem('role');
+            window.location = 'index.html';
+        });
+    });
+
+    function reset() {
+        playerOne = playerTwo = null;
+        $('#player1-ticket, #player2-ticket').html('<em>Đang đợi...</em>');
+        $('#transferer, #receiver').html('');
+        $('#credits').val('');
+
+    }
+
+    function transfer(credits) {
+        if (!playerOne || !playerTwo) return console.error('Must supply 2 players');
+        if (!credits || isNaN(credits) || credits < 1 || credits % 1 !== 0) return console.error('No credits supplied');
+
+        if (playerOne.games.credits - playerOne.games.used < credits) {
+            return alert(`Chuyển được tối đa ${playerOne.games.credits - playerOne.games.used} lượt thôi.`)
+        }
+
+        var confirmTransfer = confirm(`Xác nhận chuyển từ người chơi "${playerOne.name}" sang người chơi "${playerTwo.name}" ${credits} lượt?`);
+
+        if (!confirmTransfer) return;
+
+        $.ajax({
+            type : 'PATCH',
+            url: 'players/transfer-credits/' + playerOne._id + '/' + playerTwo._id + '/' + credits,
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+                "x-vkoys-vttt-auth": localStorage.authToken
+            }
+        }).done(function(data) {
+            $('#credit-transfer').modal('hide');
+            reset();
+        });
+    }
+
+    function getInfo(ticket) {
+        $.ajax({
+            type: 'GET',
+            url: 'tickets/' + ticket,
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+                "x-vkoys-vttt-auth": localStorage.authToken
+            }
+        }).done(function(ticket) {
+            if (!ticket.playerInfo) {
+                return alert('LỖI: Vé chưa được liên kết với người chơi!');
+            }
+
+            var remainingCredits = ticket.playerInfo.games.credit - ticket.playerInfo.games.used;
+
+            if (!playerOne) {                                
+                if (remainingCredits < 1) {
+                    return alert(`Người chơi "${ticket.playerInfo.name}" đã hết lượt chơi và không thể tiến hành chuyển.`)
+                }
+
+                playerOne = ticket.playerInfo;
+
+                $('#player1-ticket').html(`${ticket.serialNumber} (${playerOne.name})`)
+                
+                $('#transferer').html(`
+                    <strong>Mã vé:</strong> ${ticket.serialNumber}<br>
+                    <strong>Tên người chơi:</strong> ${playerOne.name}<br>
+                    <strong>Tuổi:</strong> ${playerOne.age}<br>
+                    <strong>Số lượt chơi còn lại:</strong> ${remainingCredits}<br>
+                `);
+            } else {
+                if (ticket._player === playerOne._id) {
+                    return alert('Người chơi thứ hai không thể trùng với người chơi thứ nhất!')
+                }
+
+                playerTwo = ticket.playerInfo;
+
+                $('#player2-ticket').html(`${ticket.serialNumber} (${playerOne.name})`)
+                
+                $('#receiver').html(`
+                    <strong>Mã vé:</strong> ${ticket.serialNumber}<br>
+                    <strong>Tên người chơi:</strong> ${playerOne.name}<br>
+                    <strong>Tuổi:</strong> ${playerOne.age}<br>
+                    <strong>Số lượt chơi còn lại:</strong> ${remainingCredits}<br>
+                `);
+
+                $('#credit-transfer').modal('show');
+            }
+
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status === 404) {
+                alert('LỖI: Mã vé này không có trong hệ thống!')
+            }
+        });
+    }
+    </script>
+</body>
+</html>

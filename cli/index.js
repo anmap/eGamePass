@@ -11,7 +11,7 @@ let argv = yargs.argv;
 let command = argv._[0];
 
 if (command === 'generate-tickets') {
-    generateTickets(10);
+    generateTickets(20);
 } else if (command === 'seed-tickets') {
     insertSeed();
 }

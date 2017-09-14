@@ -40,6 +40,11 @@ const BookingSchema = new mongoose.Schema({
         minlength: 8,
         unique: true
     },
+    checkin: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     _creator: {
         type: mongoose.Schema.Types.ObjectId,
         required: true

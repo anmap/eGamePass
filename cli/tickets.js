@@ -19,13 +19,13 @@ const generateTickets = async (numberOfTickets) => {
                 newSerialNumber = generateSerialNumber();
             } while (allSerialNumbers.indexOf(newSerialNumber) > -1 && newSerialNumbers.indexOf(newSerialNumber) > -1);
     
-            newSerialNumbers.push({ serialNumber: newSerialNumber });
+            newSerialNumbers.push(newSerialNumber);
         }
     
         console.log('Generated serial numbers', newSerialNumbers);
-        console.log('Inserting to database...');
+        //console.log('Inserting to database...');
     
-        await Ticket.insertMany(newSerialNumbers);
+        //await Ticket.insertMany(newSerialNumbers);
     
         console.log('Operation done!');
     } catch (error) {
@@ -47,9 +47,9 @@ const insertSeed = async () => {
     let seedSeriesNumbers = [
         '2DR2A',
         'D14DD',
-        'PZSI0',
-        'CKHNZ',
-        'JIXKC',
+        'PZSI8',
+        'CK5NZ',
+        'JI2KC',
         'MNU0J',
         'DYUV6',
         'BV5OI',
@@ -76,7 +76,7 @@ const insertSeed = async () => {
         'B55XL',
         '1J1RT',
         'G0Q21',
-        'LES8F',
+        'LEZ8F',
         '60Y39',
         'JTXP3',
         '3L9BM',
@@ -104,7 +104,47 @@ const insertSeed = async () => {
         'AJ3T5',
         'Y6QK9',
         '848BK',
-        'DTUB1' 
+        'DTUB1',
+        'EL1PV',
+        'V6PTK',
+        'MBESG',
+        'YY07J',
+        'V7ELN',
+        'A8FZ6',
+        'Q30UE',
+        'HIX78',
+        '25XEL',
+        'I32PZ',
+        'H3JWG',
+        'D1OBV',
+        'N367B',
+        '28XYE',
+        'DNZ0Z',
+        'TA8AJ',
+        'Q74UG',
+        'SM56Y',
+        '6MWBK',
+        'EC8ZU',
+        'W5TOZ',
+        'JZ4NQ',
+        'TJ70X',
+        'Z8NZL',
+        'G3BXU',
+        '65L3J',
+        '1VKJF',
+        'YEZG7',
+        'G8S0K',
+        '81FTF',
+        'OGOS2',
+        '7C30R',
+        'VGH12',
+        'OJF5F',
+        'YPE9Z',
+        'P8XR6',
+        '7XADR',
+        'BN3I1',
+        'LYN71',
+        '65KIS'
     ];
 
     let newSerialNumbers = [];

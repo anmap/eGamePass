@@ -110,13 +110,13 @@
         scanner = new Instascan.Scanner(qrOpts);
 
         scanner.addListener('scan', function (code) {
-            var ticket = getCode(code);
+            var result = getCode(code);
 
-            if (ticket) {
+            if (result && result.type === 'ticket') {
                 if (navigator.vibrate) {
                     navigator.vibrate(500);
                 }
-                getInfo(ticket.code);
+                getInfo(result.code);
             } else {
                 console.error('Invalid ticket serial number');
             }

@@ -125,3 +125,5 @@ const ACTIONS = {
         }
     }
 };
+
+module.exports = { ACTIONS };

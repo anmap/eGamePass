@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Kiểm tra booking - Vầng trăng tuổi thơ</title>
+
+    <script src="scripts/roles.js"></script>
+    
+    <script>    
+    // Check LocalStorage
+    if (typeof(Storage) === "undefined") {
+        $(document).html('<h1 class="text-center text-danger">No LocalStorage support!</h1>')
+    }
+
+    // Check LocalStorage Data
+    // Check LocalStorage Data
+    if (!localStorage.authToken ||
+        ([ROLES.ADMIN, ROLES.BOOKING_CHECKER]).indexOf(localStorage.role) === -1) {
+        window.location = 'index.html';
+    }
+    </script>
+
+   <!-- Latest compiled and minified CSS -->
+   <link rel="stylesheet" href="styles/bootstrap.min.css">
+   <!-- Optional theme -->
+   <link rel="stylesheet" href="styles/bootstrap-theme.min.css">
+
+   <style>
+       .video-center {
+            margin-left: auto;
+            margin-right: auto;
+            display: block
+        }
+
+        .video-responsive {
+            width: 100%;
+            height: auto;
+        }
+   </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Vầng trăng tuổi thơ</h1>
+        <h4 class="text-center">KIỂM TRA BOOKING</h4>
+        <br>
+        <div class="text-center">
+            <button id="btn-logout" class="btn btn-danger">Đăng xuất</button>&nbsp;
+            <button id="btn-manual" class="btn btn-primary">Nhập mã booking</button>
+        </div>
+        <br>        
+        <div id="camera-switcher">
+            <p class="text-center"><strong>Chọn camera:</strong></p>
+        </div>
+        <br>
+        <video id="scanner" class="video-center video-responsive"></video>      
+    </div>
+
+    <!-- Credit deposit modal -->
+    <div class="modal fade" id="booking" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Nạp lượt</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success">Đóng</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import JS libraries and scripts -->
+    <script src="scripts/jquery-1.12.4.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+    <script src="scripts/instascan.min.js"></script>
+    <script src="scripts/code-validate.js"></script>
+    <!-- Own scripts -->
+    <script>
+    var qrOpts = {
+        continuous: true,
+        video: document.getElementById('scanner'),
+        mirror: false,
+        backgroundScan: false,
+        refractoryPeriod: 5000
+    }
+
+    var cameraList;
+
+    var currentPlayerId;
+
+    var scanner;
+
+    $(document).ready(function() {
+        $('#btn-logout').on('click', function() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('username');
+            localStorage.removeItem('name');
+            localStorage.removeItem('role');
+            window.location = 'index.html';
+        });
+
+        scanner = new Instascan.Scanner(qrOpts);
+
+        scanner.addListener('scan', function (code) {
+            var result = getCode(code);
+
+            if (result && result.type === 'booking') {
+                if (navigator.vibrate) {
+                    navigator.vibrate(500);
+                }
+                getInfo(result.code);
+            } else {
+                console.error('Invalid ticket serial number');
+            }
+        });
+
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (!scanner) return;
+
+            if (cameras.length > 1) {
+                scanner.start(cameras[1]);
+            } else if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            }
+            cameraList = cameras;
+
+            for (var i=0; i < cameras.length; i++) {
+                $('#camera-switcher').append(`
+                    <p class="text-center">
+                        <a href="#" class="switcher" data-index="${i}">${ cameras[i].name }</a>
+                    </p>
+                `)
+            }
+        }).catch(function (e) {
+            $('#camera-switcher').html('<p><strong class="text-danger">Không tìm thấy camera nào</strong></p>');
+            console.error(e);
+        });
+
+        $('#btn-manual').on('click', function() {
+            var code = prompt('Xin nhập mã vé');
+            if (!code) return;
+            code = code.replace(/ +/g, "");
+            if (code.length === 5) {
+                getInfo(code.toUpperCase());
+            }
+        });
+
+        $(document).on('click', '.switcher', function(e) {
+            e.preventDefault();
+            var index = $(this).data('index');
+            scanner.start(cameraList[index]);
+        });
+
+        $('#new-player').on('hidden.bs.modal', function () {
+            $('#input-name, #input-age').val('');
+        });
+
+        $('#deposit').on('hidden.bs.modal', function () {
+            $('#input-game-deposit').val('');
+            $('#btn-food-deposit').show();
+        });
+
+        $('#btn-game-deposit').on('click', function(e) {
+            e.preventDefault();
+            var credits = $('#input-game-deposit').val();
+            depositGame(credits);
+        });
+    });
+
+    function depositGame(credits) {
+        if (!currentPlayerId) return console.error('No playerId supplied');
+        if (!credits || isNaN(credits) || credits < 1 || credits % 1 !== 0) return console.error('No credits supplied');        
+
+        var confirmGameDeposit = confirm(`Chắc chắn nạp ${credits} lượt?`);
+
+        if (confirmGameDeposit) {
+            $.ajax({
+                type: 'PATCH',
+                url: 'players/' + currentPlayerId + '/games/deposit/' + credits,
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": localStorage.authToken
+                }
+            }).done(function(data) {
+                currentPlayerId = null;
+                $('#deposit').modal('hide');
+            });
+        }        
+    }
+
+    function depositFood() {
+        if (!currentPlayerId) return console.error('No playerId supplied');
+
+        var confirmFoodDeposit = confirm(`Chắc chắn thêm 1 phần ăn cho người chơi?`);
+
+        if (confirmFoodDeposit) {
+            $.ajax({
+                type: 'PATCH',
+                url: 'players/' + currentPlayerId + '/food/deposit',
+                contentType: "application/json",
+                dataType: 'json',
+                headers: {
+                    "x-vkoys-vttt-auth": localStorage.authToken
+                }
+            }).done(function(data) {
+                currentPlayerId = null;
+                $('#deposit').modal('hide');
+            });
+        }
+    }
+
+    function getInfo(bookingCode) {
+        $.ajax({
+            type: 'GET',
+            url: 'bookings/' + bookingCode,
+            contentType: "application/json",
+            dataType: 'json',
+            headers: {
+                "x-vkoys-vttt-auth": localStorage.authToken
+            }
+        }).done(function(booking) {
+            
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if (jqXHR.status === 404) {
+                alert('LỖI: Mã booking này không có trong hệ thống!')
+            }
+        });
+    }
+    </script>
+</body>
+</html>

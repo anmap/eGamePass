@@ -65,7 +65,7 @@
                 <h4 class="modal-title">Thêm người chơi mới</h4>
             </div>
             <div class="modal-body">
-                <label class="control-label" for="serial-number">Mã thẻ:</label>
+                <label class="control-label" for="serial-number">Mã vé:</label>
                 <p class="serial-number"></p>
                 <br>
                 <div class="input-group">
@@ -165,13 +165,13 @@
         scanner = new Instascan.Scanner(qrOpts);
 
         scanner.addListener('scan', function (code) {
-            var ticket = getCode(code);
+            var result = getCode(code);
 
-            if (ticket) {
+            if (result && result.type === 'ticket') {
                 if (navigator.vibrate) {
                     navigator.vibrate(500);
                 }
-                getInfo(ticket.code);
+                getInfo(result.code);
             } else {
                 console.error('Invalid ticket serial number');
             }

@@ -34,8 +34,8 @@ bookingsRoutes.post('/', auth, async (req, res) => {
         let booking = await new Booking(body).save();
         booking = booking.toJSON();
         booking.creatorInfo = await User.findById(booking._creator, '-_id username name');
-        res.send(booking);
 
+        res.send(booking);
     } catch (error) {
         console.log(error);
         res.status(400).send(error);
@@ -62,20 +62,20 @@ bookingsRoutes.get('/', auth, async (req, res) => {
     }
 });
 
-bookingsRoutes.get('/:id', auth, async (req, res) => {
+bookingsRoutes.get('/:bookingCode', auth, async (req, res) => {
     // Access level check (hardcoded)
     if ([ROLES.ADMIN, ROLES.BOOKER, ROLES.BOOKING_CHECKER].indexOf(req.user.role) === -1) {
         return res.status(403).send();
     }
 
-    let bookingId = req.params.id;
+    let bookingCode = req.params.bookingCode.toUpperCase();
 
-    if (!ObjectID.isValid(bookingId)) {
-        return res.status(404).send();
+    if (bookingCode.length !== 8) {
+        return res.status(400).send();
     }
 
     try {
-        let booking = await Booking.findById(bookingId).lean();
+        let booking = await Booking.findOne({ bookingCode }).lean();
         if (!booking) {
             return res.status(404).send();
         }
@@ -143,6 +143,35 @@ bookingsRoutes.patch('/:id', auth, async (req, res) => {
 
         let updatedBooking = await Booking.findByIdAndUpdate(bookingId, {
             $set: body
+        }, { new: true })
+
+        if (!updatedBooking) {
+            return res.status(404).send();
+        }
+        
+        res.send(updatedBooking);
+    } catch (error) {
+        console.log(error)
+        res.status(400).send(error);
+    }
+});
+
+bookingsRoutes.patch('/:id/checkin', auth, async (req, res) => {    
+    if ([ROLES.ADMIN, ROLES.BOOKING_CHECKER].indexOf(req.user.role) === -1) {
+        return res.status(403).send();
+    }
+
+    let bookingId = req.params.id;
+    
+    if (!ObjectID.isValid(bookingId)) {
+        return res.status(404).send();
+    }
+
+    try {
+        let updatedBooking = await Booking.findByIdAndUpdate(bookingId, {
+            $set: {
+                'checkin': true
+            }
         }, { new: true })
 
         if (!updatedBooking) {

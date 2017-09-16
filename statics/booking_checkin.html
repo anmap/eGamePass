@@ -47,7 +47,8 @@
         <br>
         <div class="text-center">
             <button id="btn-logout" class="btn btn-danger">Đăng xuất</button>&nbsp;
-            <button id="btn-manual" class="btn btn-primary">Nhập mã booking</button>
+            <button id="btn-manual" class="btn btn-primary">Nhập mã booking</button><br><br>
+            <a href="booking_add_player.html"><button class="btn btn-success">Thêm người chơi</button></a>
         </div>
         <br>        
         <div id="camera-switcher">
@@ -62,11 +63,11 @@
         <div class="modal-dialog modal-md">
             <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Nạp lượt</h4>
+                <h4 class="modal-title">Booking check-in</h4>
             </div>
             <div class="modal-body"></div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success">Đóng</button>
+                <button type="button" class="btn btn-success" id="checkin" onclick="checkin()">Check in</button>
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Đóng</button>
             </div>
             </div>
@@ -90,7 +91,7 @@
 
     var cameraList;
 
-    var currentPlayerId;
+    var currentBooking;
 
     var scanner;
 
@@ -114,7 +115,7 @@
                 }
                 getInfo(result.code);
             } else {
-                console.error('Invalid ticket serial number');
+                console.error('Invalid booking code');
             }
         });
 
@@ -141,10 +142,10 @@
         });
 
         $('#btn-manual').on('click', function() {
-            var code = prompt('Xin nhập mã vé');
+            var code = prompt('Xin nhập mã booking');
             if (!code) return;
             code = code.replace(/ +/g, "");
-            if (code.length === 5) {
+            if (code.length === 8) {
                 getInfo(code.toUpperCase());
             }
         });
@@ -155,61 +156,29 @@
             scanner.start(cameraList[index]);
         });
 
-        $('#new-player').on('hidden.bs.modal', function () {
-            $('#input-name, #input-age').val('');
-        });
-
-        $('#deposit').on('hidden.bs.modal', function () {
-            $('#input-game-deposit').val('');
-            $('#btn-food-deposit').show();
-        });
-
-        $('#btn-game-deposit').on('click', function(e) {
-            e.preventDefault();
-            var credits = $('#input-game-deposit').val();
-            depositGame(credits);
+        $('#booking').on('hidden.bs.modal', function () {
+            currentBooking = null;
+            $('#booking .modal-body').html('');
+            $('#checkin').show();
         });
     });
 
-    function depositGame(credits) {
-        if (!currentPlayerId) return console.error('No playerId supplied');
-        if (!credits || isNaN(credits) || credits < 1 || credits % 1 !== 0) return console.error('No credits supplied');        
+    function checkin() {
+        if (!currentBooking) return console.error('No booking supplied');
 
-        var confirmGameDeposit = confirm(`Chắc chắn nạp ${credits} lượt?`);
+        var confirmCheckin = confirm(`Chắc chắn checkin booking này?`);
 
-        if (confirmGameDeposit) {
+        if (confirmCheckin) {
             $.ajax({
                 type: 'PATCH',
-                url: 'players/' + currentPlayerId + '/games/deposit/' + credits,
+                url: 'bookings/' + currentBooking._id + '/checkin',
                 contentType: "application/json",
                 dataType: 'json',
                 headers: {
                     "x-vkoys-vttt-auth": localStorage.authToken
                 }
             }).done(function(data) {
-                currentPlayerId = null;
-                $('#deposit').modal('hide');
-            });
-        }        
-    }
-
-    function depositFood() {
-        if (!currentPlayerId) return console.error('No playerId supplied');
-
-        var confirmFoodDeposit = confirm(`Chắc chắn thêm 1 phần ăn cho người chơi?`);
-
-        if (confirmFoodDeposit) {
-            $.ajax({
-                type: 'PATCH',
-                url: 'players/' + currentPlayerId + '/food/deposit',
-                contentType: "application/json",
-                dataType: 'json',
-                headers: {
-                    "x-vkoys-vttt-auth": localStorage.authToken
-                }
-            }).done(function(data) {
-                currentPlayerId = null;
-                $('#deposit').modal('hide');
+                $('#booking').modal('hide');
             });
         }
     }
@@ -224,7 +193,26 @@
                 "x-vkoys-vttt-auth": localStorage.authToken
             }
         }).done(function(booking) {
-            
+            currentBooking = booking;
+
+            $('#booking .modal-body').html(`
+                <strong>Mã đặt vé:</strong> ${booking.bookingCode}<br>
+                <strong>Họ tên:</strong> ${booking.name}<br>
+                <strong>Email:</strong> ${booking.email || '<em>Không có</em>'}<br>
+                <strong>Số ĐT:</strong> ${booking.tel || '<em>Không có</em>'}<br>
+                <strong>Số vé đã đặt:</strong> ${booking.numberOfTickets}<br>
+                <strong>Đã thanh toán:</strong> <span class="${ booking.numberOfPaidTickets === booking.numberOfTickets ? 'text-success' : 'text-danger' }">${booking.numberOfPaidTickets}/${booking.numberOfTickets}</span><br>
+                ${ booking.numberOfPaidTickets < booking.numberOfTickets ?
+                    '<span class=text-danger>SỐ TIỀN PHẢI THANH TOÁN: ' + (booking.numberOfTickets - booking.numberOfPaidTickets) * 5 + ' EUR</span>'
+                    : ''}<br><br>
+                ${ booking.checkin ? '<strong class="text-success">ĐÃ ĐƯỢC CHECK-IN</strong>' : '' }
+            `);
+
+            if (booking.checkin) {
+                $('#checkin').hide();
+            }
+
+            $('#booking').modal('show');
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (jqXHR.status === 404) {
                 alert('LỖI: Mã booking này không có trong hệ thống!')

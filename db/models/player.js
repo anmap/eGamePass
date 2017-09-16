@@ -15,7 +15,7 @@ const PlayerSchema = new mongoose.Schema({
         credit: {
             type: Number,
             required: true,
-            default: 5
+            default: 10
         },
         used: { 
             type: Number,

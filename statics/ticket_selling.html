@@ -283,8 +283,8 @@
             headers: {
                 "x-vkoys-vttt-auth": localStorage.authToken
             }
-        }).done(function(data) {
-            $('#ticket-info').modal('hide');
+        }).done(function(data) {            
+            $('#new-player').modal('hide');
         });
     }
 
@@ -297,7 +297,6 @@
                 name: $('#input-name').val(),
                 age: $('#input-age').val()
             });
-            $('#new-player').modal('hide');
         });
     }
 

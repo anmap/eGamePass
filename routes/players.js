@@ -13,10 +13,10 @@ const { ROLES } = require('./../config/roles');
 let playersRoutes = express.Router();
 
 // Insert new player
-playersRoutes.post('/:ticketId/:bookingCode?', auth, async (req, res) => {
+playersRoutes.post('/:ticketId/:bookingId?', auth, async (req, res) => {
     // Define roles
     let acceptedRoles;
-    if (req.params.bookingCode) {
+    if (req.params.bookingId) {
         acceptedRoles = [ROLES.ADMIN, ROLES.BOOKER];
     } else {
         acceptedRoles = [ROLES.ADMIN, ROLES.TICKET_SELLER];
@@ -50,17 +50,25 @@ playersRoutes.post('/:ticketId/:bookingCode?', auth, async (req, res) => {
         }
 
         // if player's gonna be linked with a booking, check if booking if exists
-        if (req.params.bookingCode) {            
-            let bookingCode = req.params.bookingCode.toUpperCase();
+        if (req.params.bookingId) {            
+            let bookingId = req.params.bookingId.toUpperCase();
 
-            if (bookingCode.length !== 8) {
+            if (!ObjectID.isValid(bookingId)) {
                 return res.status(400).send();
             }
 
-            let booking = await Booking.findOne({ bookingCode });
+            let booking = await Booking.findById(bookingId);
             if (!booking) {
                 return res.status(404).send();
             }
+            
+            // Check if booking has already enough players
+            let bookingPlayers = await Player.find({ _booking: bookingId });
+
+            if (bookingPlayers.length === booking.numberOfTickets) {
+                return res.status(400).send();
+            }
+
             body._booking = booking._id;
         }
 

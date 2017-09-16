@@ -2,23 +2,23 @@
 const GAMES = {
     VTTT_GAME_1: {
         code: 'VTTT_GAME_1',
-        desc: 'Mô tả cho trò số 1'
+        desc: 'Đi dây'
     },
     VTTT_GAME_2: {
         code: 'VTTT_GAME_2',
-        desc: 'Mô tả cho trò số 2'
+        desc: 'Ném lon'
     },
     VTTT_GAME_3: {
         code: 'VTTT_GAME_3',
-        desc: 'Mô tả cho trò số 3'
+        desc: 'Đập cá'
     },
     VTTT_GAME_4: {
         code: 'VTTT_GAME_4',
-        desc: 'Mô tả cho trò số 4'
+        desc: 'Ném banh'
     },
     VTTT_GAME_5: {
         code: 'VTTT_GAME_5',
-        desc: 'Mô tả cho trò số 5'
+        desc: 'Ném vòng'
     },
 }
 

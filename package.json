@@ -1,7 +1,7 @@
 {
   "name": "eGamePass",
   "version": "0.2.0",
-  "description": "A ticket control system for carnival-based game event`",
+  "description": "A ticket control system for carnival-based game event",
   "main": "index.js",
   "engines": {
     "node": ">= 7.6.0"

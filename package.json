@@ -1,7 +1,7 @@
 {
-  "name": "vkoys-vttt-api",
-  "version": "1.0.0",
-  "description": "API system for VKOYS \"Vầng Trăng Tuổi Thơ\" event",
+  "name": "eGamePass",
+  "version": "0.2.0",
+  "description": "A ticket control system for carnival-based game event`",
   "main": "index.js",
   "engines": {
     "node": ">= 7.6.0"

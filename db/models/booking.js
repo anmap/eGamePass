@@ -66,11 +66,11 @@ BookingSchema.statics.getAllBookingCodes = async function() {
 
 BookingSchema.statics.generateBookingCode = function() {
     let text = "";
-    let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  
+    const POSSIBLE_OCCURANCES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
     for (let i = 0; i < 8; i++)
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-  
+      text += POSSIBLE_OCCURANCES.charAt(Math.floor(Math.random() * POSSIBLE_OCCURANCES.length));
+
     return text;
 }
 

@@ -1,13 +1,13 @@
 {
     "development": {
         "PORT": 7805,
-        "MONGODB_URI": "mongodb://localhost:27017/VKOYS-VTTT",
+        "MONGODB_URI": "mongodb://localhost:27017/eGamePass",
         "JWT_SECRET": "VKOYS_VTTT_API",
         "AUTH_HEADER": "x-vkoys-vttt-auth"
     },
     "test": {
         "PORT": 7805,
-        "MONGODB_URI": "mongodb://localhost:27017/VKOYS-VTTT-Test",
+        "MONGODB_URI": "mongodb://localhost:27017/eGamePass",
         "JWT_SECRET": "VKOYS_VTTT_API",
         "AUTH_HEADER": "x-vkoys-vttt-auth"
     }

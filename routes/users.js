@@ -11,12 +11,12 @@ usersRoutes.get('/', async (req, res) => {
     res.send('Users route')
 });
 
-usersRoutes.post('/', async (req, res) => {    
+usersRoutes.post('/', async (req, res) => {
     try {
         let body = _.pick(req.body, ['username', 'name', 'password']);
         let user = new User(body);
         await user.save();
-        let token = await user.generateAuthToken();       
+        let token = await user.generateAuthToken();
         res.header(process.env.AUTH_HEADER, token).send(user);
     } catch (error) {
         console.log(error);
